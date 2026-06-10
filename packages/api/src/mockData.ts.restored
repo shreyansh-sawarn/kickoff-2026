@@ -1,0 +1,94 @@
+Created At: 2026-06-05T17:16:22Z
+Completed At: 2026-06-05T17:16:22Z
+File Path: `file:///c:/Users/shrey/Documents/Repos/kickoff-2026/packages/api/src/mockData.ts`
+Total Lines: 407
+Total Bytes: 17550
+Showing lines 1 to 407
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1: import { Team, Match, Group, Player, Stadium } from "@wc26/types";
+2: 
+3: // 48 Teams grouped into 12 groups (A to L)
+4: export const MOCK_TEAMS: Team[] = [
+5:   // Group A
+6:   { id: "usa", name: "United States", code: "USA", flag: "usa", confederation: "CONCACAF", group: "A" },
+7:   { id: "fra", name: "France", code: "FRA", flag: "fra", confederation: "UEFA", group: "A" },
+8:   { id: "cmr", name: "Cameroon", code: "CMR", flag: "cmr", confederation: "CAF", group: "A" },
+9:   { id: "nzl", name: "New Zealand", code: "NZL", flag: "nzl", confederation: "OFC", group: "A" },
+10: 
+11:   // Group B
+12:   { id: "mex", name: "Mexico", code: "MEX", flag: "mex", confederation: "CONCACAF", group: "B" },
+13:   { id: "esp", name: "Spain", code: "ESP", flag: "esp", confederation: "UEFA", group: "B" },
+14:   { id: "nga", name: "Nigeria", code: "NGA", flag: "nga", confederation: "CAF", group: "B" },
+15:   { id: "aus", name: "Australia", code: "AUS", flag: "aus", confederation: "AFC", group: "B" },
+16: 
+17:   // Group C
+18:   { id: "can", name: "Canada", code: "CAN", flag: "can", confederation: "CONCACAF", group: "C" },
+19:   { id: "ger", name: "Germany", code: "GER", flag: "ger", confederation: "UEFA", group: "C" },
+20:   { id: "mar", name: "Morocco", code: "MAR", flag: "mar", confederation: "CAF", group: "C" },
+21:   { id: "jpn", name: "Japan", code: "JPN", flag: "jpn", confederation: "AFC", group: "C" },
+22: 
+23:   // Group D
+24:   { id: "arg", name: "Argentina", code: "ARG", flag: "arg", confederation: "CONMEBOL", group: "D" },
+25:   { id: "eng", name: "England", code: 
+<truncated 15927 bytes>
+ts: { home: 6, away: 1 },
+349:       shotsOnTarget: { home: 3, away: 0 },
+350:       corners: { home: 3, away: 0 },
+351:       fouls: { home: 4, away: 8 },
+352:       yellowCards: { home: 0, away: 1 },
+353:       redCards: { home: 0, away: 0 }
+354:     }
+355:   },
+356: 
+357:   // Upcoming Matches
+358:   {
+359:     id: "m-3",
+360:     homeTeam: MOCK_TEAMS.find((t) => t.id === "can")!,
+361:     awayTeam: MOCK_TEAMS.find((t) => t.id === "mar")!,
+362:     status: "upcoming",
+363:     datetime: new Date(Date.now() + 2 * 3600000).toISOString(), // 2 hours from now
+364:     group: "Group C",
+365:     stadium: "BC Place",
+366:     city: "Vancouver",
+367:     scorers: [],
+368:     events: []
+369:   },
+370:   {
+371:     id: "m-4",
+372:     homeTeam: MOCK_TEAMS.find((t) => t.id === "bra")!,
+373:     awayTeam: MOCK_TEAMS.find((t) => t.id === "egy")!,
+374:     status: "upcoming",
+375:     datetime: new Date(Date.now() + 6 * 3600000).toISOString(), // 6 hours from now
+376:     group: "Group E",
+377:     stadium: "Mercedes-Benz Stadium",
+378:     city: "Atlanta",
+379:     scorers: [],
+380:     events: []
+381:   },
+382:   {
+383:     id: "m-5",
+384:     homeTeam: MOCK_TEAMS.find((t) => t.id === "eng")!,
+385:     awayTeam: MOCK_TEAMS.find((t) => t.id === "sen")!,
+386:     status: "upcoming",
+387:     datetime: new Date(Date.now() + 24 * 3600000).toISOString(), // 1 day from now
+388:     group: "Group D",
+389:     stadium: "MetLife Stadium",
+390:     city: "East Rutherford (NY/NJ)",
+391:     scorers: [],
+392:     events: []
+393:   },
+394:   {
+395:     id: "m-6",
+396:     homeTeam: MOCK_TEAMS.find((t) => t.id === "esp")!,
+397:     awayTeam: MOCK_TEAMS.find((t) => t.id === "nga")!,
+398:     status: "upcoming",
+399:     datetime: new Date(Date.now() + 48 * 3600000).toISOString(), // 2 days from now
+400:     group: "Group B",
+401:     stadium: "Estadio Azteca",
+402:     city: "Mexico City",
+403:     scorers: [],
+404:     events: []
+405:   }
+406: ];
+407: 
+The above content shows the entire, complete file contents of the requested file.
