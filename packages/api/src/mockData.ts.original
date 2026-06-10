@@ -1,0 +1,90 @@
+import { Team, Match, Group, Player, Stadium } from "@wc26/types";
+
+// 48 Teams grouped into 12 groups (A to L)
+export const MOCK_TEAMS: Team[] = [
+  // Group A
+  { id: "usa", name: "United States", code: "USA", flag: "usa", confederation: "CONCACAF", group: "A" },
+  { id: "fra", name: "France", code: "FRA", flag: "fra", confederation: "UEFA", group: "A" },
+  { id: "cmr", name: "Cameroon", code: "CMR", flag: "cmr", confederation: "CAF", group: "A" },
+  { id: "nzl", name: "New Zealand", code: "NZL", flag: "nzl", confederation: "OFC", group: "A" },
+
+  // Group B
+  { id: "mex", name: "Mexico", code: "MEX", flag: "mex", confederation: "CONCACAF", group: "B" },
+  { id: "esp", name: "Spain", code: "ESP", flag: "esp", confederation: "UEFA", group: "B" },
+  { id: "nga", name: "Nigeria", code: "NGA", flag: "nga", confederation: "CAF", group: "B" },
+  { id: "aus", name: "Australia", code: "AUS", flag: "aus", confederation: "AFC", group: "B" },
+
+  // Group C
+  { id: "can", name: "Canada", code: "CAN", flag: "can", confederation: "CONCACAF", group: "C" },
+  { id: "ger", name: "Germany", code: "GER", flag: "ger", confederation: "UEFA", group: "C" },
+  { id: "mar", name: "Morocco", code: "MAR", flag: "mar", confederation: "CAF", group: "C" },
+  { id: "jpn", name: "Japan", code: "JPN", flag: "jpn", confederation: "AFC", group: "C" },
+
+  // Group D
+  { id: "arg", name: "Argentina", code: "ARG", flag: "arg", confederation: "CONMEBOL", group: "D" },
+  { id: "eng", name: "England", code: 
+    city: "East Rutherford (NY/NJ)",
+    scorers: [],
+    events: []
+  },
+  {
+    id: "m-live-2",
+    homeTeam: MOCK_TEAMS.find((t) => t.id === "arg")!,
+    awayTeam: MOCK_TEAMS.find((t) => t.id === "ksa")!,
+    status: "upcoming",
+    datetime: "2026-06-12T18:00:00Z",
+    group: "Group D",
+    stadium: "Hard Rock Stadium",
+    city: "Miami",
+    scorers: [],
+    events: []
+  },
+  {
+    id: "m-3",
+    homeTeam: MOCK_TEAMS.find((t) => t.id === "can")!,
+    awayTeam: MOCK_TEAMS.find((t) => t.id === "mar")!,
+    status: "upcoming",
+    datetime: "2026-06-13T15:00:00Z",
+    group: "Group C",
+    stadium: "BC Place",
+    city: "Vancouver",
+    scorers: [],
+    events: []
+  },
+  {
+    id: "m-4",
+    homeTeam: MOCK_TEAMS.find((t) => t.id === "bra")!,
+    awayTeam: MOCK_TEAMS.find((t) => t.id === "egy")!,
+    status: "upcoming",
+    datetime: "2026-06-13T18:00:00Z",
+    group: "Group E",
+    stadium: "Mercedes-Benz Stadium",
+    city: "Atlanta",
+    scorers: [],
+    events: []
+  },
+  {
+    id: "m-5",
+    homeTeam: MOCK_TEAMS.find((t) => t.id === "eng")!,
+    awayTeam: MOCK_TEAMS.find((t) => t.id === "sen")!,
+    status: "upcoming",
+    datetime: "2026-06-14T15:00:00Z",
+    group: "Group D",
+    stadium: "MetLife Stadium",
+    city: "East Rutherford (NY/NJ)",
+    scorers: [],
+    events: []
+  },
+  {
+    id: "m-6",
+    homeTeam: MOCK_TEAMS.find((t) => t.id === "esp")!,
+    awayTeam: MOCK_TEAMS.find((t) => t.id === "nga")!,
+    status: "upcoming",
+    datetime: "2026-06-14T18:00:00Z",
+    group: "Group B",
+    stadium: "Estadio Azteca",
+    city: "Mexico City",
+    scorers: [],
+    events: []
+  }
+];

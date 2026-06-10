@@ -1,0 +1,101 @@
+Created At: 2026-06-06T22:04:16Z
+Completed At: 2026-06-06T22:04:16Z
+File Path: `file:///c:/Users/shrey/Documents/Repos/kickoff-2026/packages/api/src/mockData.ts`
+Total Lines: 289
+Total Bytes: 12456
+Showing lines 1 to 289
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1: import { Team, Match, Group, Player, Stadium } from "@wc26/types";
+2: 
+3: // 48 Teams grouped into 12 groups (A to L)
+4: export const MOCK_TEAMS: Team[] = [
+5:   // Group A
+6:   { id: "usa", name: "United States", code: "USA", flag: "usa", confederation: "CONCACAF", group: "A" },
+7:   { id: "fra", name: "France", code: "FRA", flag: "fra", confederation: "UEFA", group: "A" },
+8:   { id: "cmr", name: "Cameroon", code: "CMR", flag: "cmr", confederation: "CAF", group: "A" },
+9:   { id: "nzl", name: "New Zealand", code: "NZL", flag: "nzl", confederation: "OFC", group: "A" },
+10: 
+11:   // Group B
+12:   { id: "mex", name: "Mexico", code: "MEX", flag: "mex", confederation: "CONCACAF", group: "B" },
+13:   { id: "esp", name: "Spain", code: "ESP", flag: "esp", confederation: "UEFA", group: "B" },
+14:   { id: "nga", name: "Nigeria", code: "NGA", flag: "nga", confederation: "CAF", group: "B" },
+15:   { id: "aus", name: "Australia", code: "AUS", flag: "aus", confederation: "AFC", group: "B" },
+16: 
+17:   // Group C
+18:   { id: "can", name: "Canada", code: "CAN", flag: "can", confederation: "CONCACAF", group: "C" },
+19:   { id: "ger", name: "Germany", code: "GER", flag: "ger", confederation: "UEFA", group: "C" },
+20:   { id: "mar", name: "Morocco", code: "MAR", flag: "mar", confederation: "CAF", group: "C" },
+21:   { id: "jpn", name: "Japan", code: "JPN", flag: "jpn", confederation: "AFC", group: "C" },
+22: 
+23:   // Group D
+24:   { id: "arg", name: "Argentina", code: "ARG", flag: "arg", confederation: "CONMEBOL", group: "D" },
+25:   { id: "eng", name: "England", code: 
+<truncated 10243 bytes>
+"MetLife Stadium",
+224:     city: "East Rutherford (NY/NJ)",
+225:     scorers: [],
+226:     events: []
+227:   },
+228:   {
+229:     id: "m-live-2",
+230:     homeTeam: MOCK_TEAMS.find((t) => t.id === "arg")!,
+231:     awayTeam: MOCK_TEAMS.find((t) => t.id === "ksa")!,
+232:     status: "upcoming",
+233:     datetime: "2026-06-12T18:00:00Z",
+234:     group: "Group D",
+235:     stadium: "Hard Rock Stadium",
+236:     city: "Miami",
+237:     scorers: [],
+238:     events: []
+239:   },
+240:   {
+241:     id: "m-3",
+242:     homeTeam: MOCK_TEAMS.find((t) => t.id === "can")!,
+243:     awayTeam: MOCK_TEAMS.find((t) => t.id === "mar")!,
+244:     status: "upcoming",
+245:     datetime: "2026-06-13T15:00:00Z",
+246:     group: "Group C",
+247:     stadium: "BC Place",
+248:     city: "Vancouver",
+249:     scorers: [],
+250:     events: []
+251:   },
+252:   {
+253:     id: "m-4",
+254:     homeTeam: MOCK_TEAMS.find((t) => t.id === "bra")!,
+255:     awayTeam: MOCK_TEAMS.find((t) => t.id === "egy")!,
+256:     status: "upcoming",
+257:     datetime: "2026-06-13T18:00:00Z",
+258:     group: "Group E",
+259:     stadium: "Mercedes-Benz Stadium",
+260:     city: "Atlanta",
+261:     scorers: [],
+262:     events: []
+263:   },
+264:   {
+265:     id: "m-5",
+266:     homeTeam: MOCK_TEAMS.find((t) => t.id === "eng")!,
+267:     awayTeam: MOCK_TEAMS.find((t) => t.id === "sen")!,
+268:     status: "upcoming",
+269:     datetime: "2026-06-14T15:00:00Z",
+270:     group: "Group D",
+271:     stadium: "MetLife Stadium",
+272:     city: "East Rutherford (NY/NJ)",
+273:     scorers: [],
+274:     events: []
+275:   },
+276:   {
+277:     id: "m-6",
+278:     homeTeam: MOCK_TEAMS.find((t) => t.id === "esp")!,
+279:     awayTeam: MOCK_TEAMS.find((t) => t.id === "nga")!,
+280:     status: "upcoming",
+281:     datetime: "2026-06-14T18:00:00Z",
+282:     group: "Group B",
+283:     stadium: "Estadio Azteca",
+284:     city: "Mexico City",
+285:     scorers: [],
+286:     events: []
+287:   }
+288: ];
+289: 
+The above content shows the entire, complete file contents of the requested file.

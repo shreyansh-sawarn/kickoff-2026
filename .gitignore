@@ -1,0 +1,44 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+node_modules
+.pnp
+.pnp.js
+
+# testing
+coverage
+
+# next.js
+.next/
+.swc/
+out/
+build
+
+# expo
+.expo
+
+# misc
+.DS_Store
+*.pem
+dist
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# env files — ignore all, whitelist only .env.example
+.env
+.env.*
+!.env.example
+
+# turbo
+.turbo
+
+# scratch / dev-only files (not for deployment)
+scratch/
+docs/
+fetch.js
+trace.js
+trace2.js
+matches.json
