@@ -14,7 +14,26 @@ export function PlayersTab({ players, t }: PlayersTabProps) {
   const [filter, setFilter] = useState<PositionFilter>("ALL");
 
   if (!players) {
-    return <div className="text-center text-slate-400 py-12">Loading player stats...</div>;
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-pulse py-6">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="bg-slate-900/40 rounded-3xl border border-slate-800/60 p-6 space-y-4">
+            <div className="h-6 w-32 bg-slate-800 rounded-lg"></div>
+            <div className="space-y-3 pt-2">
+              {[1, 2, 3].map((j) => (
+                <div key={j} className="flex justify-between items-center h-12 bg-slate-800/50 rounded-xl px-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 rounded-full bg-slate-700"></div>
+                    <div className="w-24 h-4 bg-slate-700 rounded"></div>
+                  </div>
+                  <div className="w-8 h-4 bg-slate-700 rounded"></div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
   }
 
   const renderEmpty = () => (

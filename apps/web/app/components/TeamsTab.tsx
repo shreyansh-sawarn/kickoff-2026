@@ -268,9 +268,16 @@ export function TeamsTab({
                   Squad Roster
                 </h4>
                 {squadLoading ? (
-                  <div className="flex flex-col items-center justify-center py-12 space-y-3 bg-slate-900/20 border border-slate-800/40 rounded-2xl">
-                    <div className="w-8 h-8 border-3 border-emerald-450 border-t-transparent rounded-full animate-spin"></div>
-                    <span className="text-xs text-slate-500 font-bold uppercase tracking-wider">Syncing live team rosters...</span>
+                  <div className="space-y-3 animate-pulse">
+                    {[1, 2, 3, 4, 5].map((i) => (
+                      <div key={i} className="flex items-center justify-between h-12 bg-slate-900/40 border border-slate-800/40 rounded-2xl px-4">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-6 h-6 rounded-full bg-slate-800"></div>
+                          <div className="w-32 h-4 bg-slate-800 rounded"></div>
+                        </div>
+                        <div className="w-10 h-4 bg-slate-800 rounded"></div>
+                      </div>
+                    ))}
                   </div>
                 ) : dynamicSquad.length === 0 ? (
                   <div className="text-center py-10 text-xs text-slate-500 bg-slate-900/20 border border-slate-800/40 rounded-2xl">

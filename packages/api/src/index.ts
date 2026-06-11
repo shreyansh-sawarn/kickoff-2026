@@ -182,10 +182,24 @@ export async function getMatchesByGroup(group: string) {
   return matches.filter((m: any) => m.group === group);
 }
 
-export async function getNews() {
+export async function getNews(limit: number = 5) {
+  if (typeof window !== "undefined") {
+    try {
+      const res = await fetch(`/api/news?limit=${limit}`);
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && json.data) {
+          return json.data;
+        }
+      }
+    } catch (e) {
+      console.warn("Failed to fetch news via local API proxy, falling back:", e);
+    }
+  }
+
   const baseUrl = (process as any).env.WC26_API_BASE_URL || "http://127.0.0.1:8000/api/v1";
   try {
-    const res = await fetch(`${baseUrl}/news?limit=5`);
+    const res = await fetch(`${baseUrl}/news?limit=${limit}`);
     if (!res.ok) throw new Error("API error");
     return await res.json();
   } catch (e) {

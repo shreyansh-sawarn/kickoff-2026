@@ -149,7 +149,7 @@ export default function DashboardTab({
       </div>
 
       {/* World Cup News & Highlights Carousel */}
-      <DashboardNewsCarousel />
+      <DashboardNewsCarousel setActiveTab={setActiveTab} />
     </div>
   );
 }
