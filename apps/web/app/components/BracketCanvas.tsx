@@ -176,9 +176,9 @@ export function BracketCanvas({ router, matches = [] }: BracketCanvasProps) {
 
       let dateStr = "TBD";
       let timeStr = "TBD";
-      if (m.kickoffTime) {
+      if (m.datetime) {
         try {
-          const d = new Date(m.kickoffTime);
+          const d = new Date(m.datetime);
           dateStr = d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
           timeStr = d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false });
         } catch(e) {}
@@ -193,8 +193,8 @@ export function BracketCanvas({ router, matches = [] }: BracketCanvasProps) {
         homeFlag: m.homeTeam.flag || "🏳️",
         away: awayName,
         awayFlag: m.awayTeam.flag || "🏳️",
-        score: m.homeScore !== null && m.awayScore !== null ? `${m.homeScore} - ${m.awayScore}` : null,
-        winner: m.homeScore !== null && m.awayScore !== null ? (m.homeScore > m.awayScore ? homeName : (m.awayScore > m.homeScore ? awayName : undefined)) : undefined,
+        score: m.homeScore !== undefined && m.homeScore !== null && m.awayScore !== undefined && m.awayScore !== null ? `${m.homeScore} - ${m.awayScore}` : null,
+        winner: m.homeScore !== undefined && m.homeScore !== null && m.awayScore !== undefined && m.awayScore !== null ? (m.homeScore > m.awayScore ? homeName : (m.awayScore > m.homeScore ? awayName : undefined)) : undefined,
         isFinal: m.group === "final",
         isThirdPlace: m.group === "3rd"
       };
