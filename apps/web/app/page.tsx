@@ -16,6 +16,7 @@ import { PlayersTab } from "./components/PlayersTab";
 import { StadiumsTab } from "./components/StadiumsTab";
 import { ArchiveTab } from "./components/ArchiveTab";
 import { AboutTab } from "./components/AboutTab";
+import NewsTab from "./components/NewsTab";
 
 export default function Web() {
   const router = useRouter();
@@ -75,9 +76,23 @@ export default function Web() {
       {/* Main Container */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
         {loading && matches.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 space-y-4">
-            <div className="w-12 h-12 border-4 border-emerald-400 border-t-transparent rounded-full animate-spin"></div>
-            <p className="text-slate-400 text-sm">Reviewing squad lists and bracket layouts...</p>
+          <div className="space-y-8 animate-pulse">
+            {/* Header / Banner Skeleton */}
+            <div className="h-40 bg-slate-800/40 rounded-3xl border border-slate-700/30"></div>
+            
+            {/* Grid Layout skeleton */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Left 2 Cols Skeleton */}
+              <div className="lg:col-span-2 space-y-6">
+                <div className="h-48 bg-slate-800/30 rounded-2xl border border-slate-700/20"></div>
+                <div className="h-64 bg-slate-800/30 rounded-2xl border border-slate-700/20"></div>
+              </div>
+              {/* Right 1 Col Skeleton */}
+              <div className="space-y-6">
+                <div className="h-56 bg-slate-800/30 rounded-2xl border border-slate-700/20"></div>
+                <div className="h-48 bg-slate-800/30 rounded-2xl border border-slate-700/20"></div>
+              </div>
+            </div>
           </div>
         ) : (
           <>
@@ -169,6 +184,12 @@ export default function Web() {
 
             {activeTab === "about" && (
               <AboutTab
+                t={t}
+              />
+            )}
+
+            {activeTab === "news" && (
+              <NewsTab
                 t={t}
               />
             )}

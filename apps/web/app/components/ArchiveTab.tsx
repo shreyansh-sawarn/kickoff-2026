@@ -198,9 +198,10 @@ export function ArchiveTab({ t }: ArchiveTabProps) {
         </div>
 
         {loading || !fetchedData ? (
-          <div className="flex flex-col items-center justify-center py-20 space-y-4">
-            <div className="w-12 h-12 border-4 border-emerald-400 border-t-transparent rounded-full animate-spin"></div>
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest animate-pulse">Loading tournament history...</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse mt-6">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-64 bg-slate-800/30 rounded-2xl border border-slate-700/20"></div>
+            ))}
           </div>
         ) : archiveView === "knockout" ? (
           <ArchiveBracket knockout={activeData.knockout} />

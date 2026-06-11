@@ -35,7 +35,8 @@ export const TRANSLATIONS: Record<string, Record<string, string>> = {
     tournamentGoals: "Goals",
     minutesPlayed: "Minutes",
     currentClub: "Current Club",
-    pts: "pts"
+    pts: "pts",
+    news: "News"
   },
   es: {
     dashboard: "Panel",
@@ -72,7 +73,8 @@ export const TRANSLATIONS: Record<string, Record<string, string>> = {
     tournamentGoals: "Goles",
     minutesPlayed: "Minutos",
     currentClub: "Club Actual",
-    pts: "pts"
+    pts: "pts",
+    news: "Noticias y Destacados"
   },
   pt: {
     dashboard: "Painel",
@@ -109,7 +111,8 @@ export const TRANSLATIONS: Record<string, Record<string, string>> = {
     tournamentGoals: "Gols",
     minutesPlayed: "Minutos",
     currentClub: "Clube Atual",
-    pts: "pts"
+    pts: "pts",
+    news: "Notícias e Destaques"
   },
   fr: {
     dashboard: "Tableau",
@@ -146,7 +149,8 @@ export const TRANSLATIONS: Record<string, Record<string, string>> = {
     tournamentGoals: "Buts",
     minutesPlayed: "Minutes",
     currentClub: "Club Actuel",
-    pts: "pts"
+    pts: "pts",
+    news: "Actualités & Infos"
   },
   zh: {
     dashboard: "仪表板",
@@ -183,7 +187,8 @@ export const TRANSLATIONS: Record<string, Record<string, string>> = {
     tournamentGoals: "进球数",
     minutesPlayed: "上场时间",
     currentClub: "效力俱乐部",
-    pts: "分"
+    pts: "分",
+    news: "赛事新闻与聚焦"
   },
   ja: {
     dashboard: "ダッシュボード",
@@ -220,7 +225,8 @@ export const TRANSLATIONS: Record<string, Record<string, string>> = {
     tournamentGoals: "得点数",
     minutesPlayed: "出場時間",
     currentClub: "所属クラブ",
-    pts: "点"
+    pts: "点",
+    news: "ニュースと特集"
   },
   ko: {
     dashboard: "대시보드",
@@ -257,6 +263,7 @@ export const TRANSLATIONS: Record<string, Record<string, string>> = {
     tournamentGoals: "득점",
     minutesPlayed: "출전 시간",
     currentClub: "소속 클럽",
-    pts: "점"
+    pts: "점",
+    news: "뉴스 및 스포트라이트"
   }
 };

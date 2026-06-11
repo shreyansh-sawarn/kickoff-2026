@@ -10,7 +10,7 @@ import { Match, Group, Team, Player, Stadium, PlayerLeaderboards } from "@wc26/t
 import { calculateMatchPredictionPoints } from "@wc26/utils";
 import { TRANSLATIONS } from "../locales/translations";
 
-export type TabType = "dashboard" | "matches" | "standings" | "teams" | "knockout" | "stadiums" | "players" | "archive" | "predictions" | "about";
+export type TabType = "dashboard" | "matches" | "standings" | "teams" | "knockout" | "stadiums" | "players" | "archive" | "predictions" | "about" | "news";
 export type SupportedLang = "en" | "es" | "pt" | "fr" | "zh" | "ja" | "ko";
 
 export function useDashboard() {
@@ -20,7 +20,7 @@ export function useDashboard() {
     if (typeof window === "undefined") return;
     
     const hash = window.location.hash.replace("#", "");
-    const validTabs = ["dashboard", "matches", "standings", "teams", "knockout", "stadiums", "players", "archive", "predictions", "about"];
+    const validTabs = ["dashboard", "matches", "standings", "teams", "knockout", "stadiums", "players", "archive", "predictions", "about", "news"];
     if (hash && validTabs.includes(hash)) {
       setActiveTabState(hash as TabType);
     }

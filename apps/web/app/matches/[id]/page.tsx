@@ -122,9 +122,24 @@ export default function MatchDetails() {
 
   if (loading) {
     return (
-      <div className="bg-[#0b0f19] text-slate-100 min-h-screen flex flex-col items-center justify-center space-y-4">
-        <ActivitySpinner />
-        <p className="text-slate-400 text-sm">Reviewing referee notes and match logs...</p>
+      <div className="bg-[#0b0f19] text-slate-100 min-h-screen pb-12">
+        <div className="max-w-4xl mx-auto px-4 pt-8 space-y-8 animate-pulse">
+          {/* Back button skeleton */}
+          <div className="w-24 h-8 bg-slate-800/40 rounded-xl"></div>
+          
+          {/* Match header card skeleton */}
+          <div className="h-64 bg-slate-800/40 rounded-3xl border border-slate-700/30"></div>
+          
+          {/* Tabs header skeleton */}
+          <div className="flex space-x-2 border-b border-slate-800 pb-px">
+            <div className="w-24 h-10 bg-slate-800/40 rounded-t-xl"></div>
+            <div className="w-24 h-10 bg-slate-800/30 rounded-t-xl"></div>
+            <div className="w-24 h-10 bg-slate-800/30 rounded-t-xl"></div>
+          </div>
+          
+          {/* Tab contents skeleton */}
+          <div className="h-96 bg-slate-800/20 rounded-3xl border border-slate-800/40"></div>
+        </div>
       </div>
     );
   }

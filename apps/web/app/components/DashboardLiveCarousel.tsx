@@ -81,33 +81,43 @@ export function DashboardLiveCarousel({
   );
 }
 
-export function DashboardNewsCarousel() {
+interface DashboardNewsCarouselProps {
+  setActiveTab: (tab: any) => void;
+}
+
+export function DashboardNewsCarousel({ setActiveTab }: DashboardNewsCarouselProps) {
   const [news, setNews] = useState<any[]>([]);
 
   useEffect(() => {
-    getNews().then(setNews);
+    getNews(4).then(setNews);
   }, []);
 
   if (news.length === 0) return null;
 
   return (
     <div className="space-y-4">
-      <h3 className="text-sm font-bold uppercase text-slate-350 tracking-wider">World Cup Spotlights & News</h3>
-      <div className="flex space-x-5 overflow-x-auto pb-4 scrollbar-none snap-x">
-        {news.map((article, idx) => {
+      <div className="flex justify-between items-center">
+        <h3 className="text-sm font-bold uppercase text-slate-350 tracking-wider">World Cup Spotlights & News</h3>
+        <button 
+          onClick={() => setActiveTab("news")}
+          className="text-xs font-semibold text-slate-400 hover:text-emerald-400 transition-colors"
+        >
+          View More News →
+        </button>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {news.slice(0, 4).map((article, idx) => {
           const borderColors = [
             "hover:border-emerald-500/20",
             "hover:border-amber-500/20",
             "hover:border-blue-500/20",
-            "hover:border-purple-500/20",
-            "hover:border-rose-500/20"
+            "hover:border-purple-500/20"
           ];
           const tagColors = [
             "text-emerald-400 bg-emerald-500/10",
             "text-amber-400 bg-amber-500/10",
             "text-blue-400 bg-blue-500/10",
-            "text-purple-400 bg-purple-500/10",
-            "text-rose-400 bg-rose-500/10"
+            "text-purple-400 bg-purple-500/10"
           ];
           
           const colorIdx = idx % borderColors.length;
@@ -116,7 +126,7 @@ export function DashboardNewsCarousel() {
             <div 
               key={idx}
               onClick={() => window.open(article.link, '_blank')}
-              className={`flex-none w-80 bg-gradient-to-tr from-[#131b2e] to-[#1e293b]/10 border border-slate-800/80 ${borderColors[colorIdx]} rounded-2xl overflow-hidden snap-start flex flex-col hover:shadow-lg transition duration-300 cursor-pointer group`}
+              className={`bg-gradient-to-tr from-[#131b2e] to-[#1e293b]/10 border border-slate-800/80 ${borderColors[colorIdx]} rounded-2xl overflow-hidden flex flex-col hover:shadow-lg transition duration-300 cursor-pointer group`}
             >
               {article.image_url && (
                 <div className="w-full h-32 overflow-hidden bg-slate-900 border-b border-slate-800">
