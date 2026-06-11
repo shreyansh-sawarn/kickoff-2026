@@ -197,7 +197,7 @@ export async function getNews(limit: number = 5) {
     }
   }
 
-  const baseUrl = (process as any).env.WC26_API_BASE_URL || "http://127.0.0.1:8000/api/v1";
+  const baseUrl = (process as any).env.WC26_API_BASE_URL || "https://kickoff-2026-api.fly.dev/api/v1";
   try {
     const res = await fetch(`${baseUrl}/news?limit=${limit}`);
     if (!res.ok) throw new Error("API error");
@@ -299,7 +299,7 @@ export async function getPlayers(): Promise<PlayerLeaderboards> {
     return { goals: [], assists: [], yellowCards: [], redCards: [], minutes: [], cleanSheets: [] };
   }
 
-  const baseUrl = (process as any).env.WC26_API_BASE_URL || "http://localhost:8000/api/v1";
+  const baseUrl = (process as any).env.WC26_API_BASE_URL || "https://kickoff-2026-api.fly.dev/api/v1";
   
   const fetchList = async (endpoint: string, key: string, statProp: string) => {
     try {
