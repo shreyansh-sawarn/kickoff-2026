@@ -37,29 +37,29 @@ export default function MatchDetails() {
               const teamLineups = l.filter((x: any) => x.team_code === code);
               const starting = teamLineups.filter((x: any) => x.is_starting);
               
-              const defPositions = ['DF', 'DEF', 'LB', 'RB', 'CB', 'LWB', 'RWB'];
-              const midPositions = ['MF', 'MID', 'CM', 'DM', 'AM', 'LM', 'RM'];
-              const fwdPositions = ['FW', 'FWD', 'CF', 'ST', 'LW', 'RW'];
+              const isDef = (p: string) => p.includes('DEFENDER') || p.includes('BACK') || ['DF', 'DEF', 'LB', 'RB', 'CB', 'LWB', 'RWB'].includes(p);
+              const isMid = (p: string) => p.includes('MIDFIELDER') || ['MF', 'MID', 'CM', 'DM', 'AM', 'LM', 'RM'].includes(p);
+              const isFwd = (p: string) => p.includes('FORWARD') || p.includes('WING') || p.includes('STRIKER') || ['FW', 'FWD', 'CF', 'ST', 'LW', 'RW'].includes(p);
               
               let def = 0;
               let mid = 0;
               let fwd = 0;
               
               starting.forEach((x: any) => {
-                if (!x.position || x.position === 'GK') return;
-                const primaryPos = x.position.split(',')[0].toUpperCase();
-                if (defPositions.some(dp => primaryPos.includes(dp))) def++;
-                else if (midPositions.some(dp => primaryPos.includes(dp))) mid++;
-                else if (fwdPositions.some(dp => primaryPos.includes(dp))) fwd++;
+                if (!x.position || x.position.toUpperCase() === 'GOALKEEPER' || x.position.toUpperCase() === 'GK') return;
+                const primaryPos = x.position.split(',')[0].toUpperCase().trim();
+                if (isDef(primaryPos)) def++;
+                else if (isMid(primaryPos)) mid++;
+                else if (isFwd(primaryPos)) fwd++;
               });
               
               const getSortValue = (pos: string) => {
                 if (!pos) return 4;
-                const p = pos.split(',')[0].toUpperCase();
-                if (p === 'GK') return 0;
-                if (defPositions.some(dp => p.includes(dp))) return 1;
-                if (midPositions.some(dp => p.includes(dp))) return 2;
-                if (fwdPositions.some(dp => p.includes(dp))) return 3;
+                const p = pos.split(',')[0].toUpperCase().trim();
+                if (p === 'GK' || p === 'GOALKEEPER') return 0;
+                if (isDef(p)) return 1;
+                if (isMid(p)) return 2;
+                if (isFwd(p)) return 3;
                 return 4;
               };
 
@@ -102,8 +102,8 @@ export default function MatchDetails() {
               shotsOnTarget: { home: homeStat.shots_on_target, away: awayStat.shots_on_target },
               corners: { home: homeStat.corners, away: awayStat.corners },
               fouls: { home: homeStat.fouls, away: awayStat.fouls },
-              yellowCards: { home: 0, away: 0 },
-              redCards: { home: 0, away: 0 },
+              yellowCards: { home: homeStat.yellow_cards || homeStat.yellowCards || 0, away: awayStat.yellow_cards || awayStat.yellowCards || 0 },
+              redCards: { home: homeStat.red_cards || homeStat.redCards || 0, away: awayStat.red_cards || awayStat.redCards || 0 },
             };
           }
 
@@ -222,7 +222,7 @@ export default function MatchDetails() {
                     {isLive ? (
                       <div className="bg-rose-500/20 border border-rose-500/40 text-rose-400 text-xs px-3 py-1 rounded-full font-bold flex items-center space-x-1 animate-pulse mt-4">
                         <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
-                        <span>LIVE {match.minute}'</span>
+                        <span>LIVE {match.clock || `${match.minute}'`}</span>
                       </div>
                     ) : (
                       <span className="bg-slate-800 text-slate-400 text-[10px] px-3 py-1 rounded-full font-bold uppercase tracking-wider mt-4 border border-slate-700">
@@ -477,7 +477,7 @@ export default function MatchDetails() {
 
                           {/* Time Dot Center */}
                           <div className="bg-slate-950 border-2 border-slate-800 w-10 h-10 rounded-full flex items-center justify-center z-10 shadow-lg shrink-0">
-                            <span className="font-black text-xs text-emerald-400">{event.minute}'</span>
+                            <span className="font-black text-xs text-emerald-400">{(event as any).clockDisplay || event.minute}'</span>
                           </div>
 
                           {/* Scorecard on the opposite side */}

@@ -48,7 +48,7 @@ export function DashboardFavorites({
                 </>
               ) : (
                 <>
-                  <span className="text-white font-black text-sm">{match.homeScore} - {match.awayScore}</span>
+                  <span className="text-white font-black text-sm">{match.homeScore ?? 0} - {match.awayScore ?? 0}</span>
                   <span className="text-[9px] text-emerald-400 font-bold uppercase">{t(match.status)}</span>
                 </>
               )}

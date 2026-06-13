@@ -364,7 +364,7 @@ export function TeamsTab({
                           <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-wider border-b border-slate-800/40 pb-1.5">
                             <span className="text-emerald-500">{match.group}</span>
                             {isLive ? (
-                              <span className="text-rose-405 bg-rose-500/10 px-1.5 py-0.5 rounded animate-pulse">LIVE {match.minute}'</span>
+                              <span className="text-rose-405 bg-rose-500/10 px-1.5 py-0.5 rounded animate-pulse">LIVE {match.clock || `${match.minute}'`}</span>
                             ) : isUpcoming ? (
                               <span className="text-slate-500">{formatMatchDate(match.datetime)}</span>
                             ) : (
@@ -385,7 +385,7 @@ export function TeamsTab({
                               <span className="font-black text-slate-300">{formatMatchTime(match.datetime)}</span>
                             ) : (
                               <span className="font-black text-emerald-450 bg-emerald-500/5 px-2 py-0.5 rounded border border-emerald-500/10">
-                                {match.homeScore} : {match.awayScore}
+                                {match.homeScore ?? 0} : {match.awayScore ?? 0}
                               </span>
                             )}
                           </div>

@@ -45,6 +45,7 @@ export interface MatchEvent {
   detail?: string; // E.g., "Penalty", "Second yellow"
   score?: string; // Match score at the time of the event
   isPenalty?: boolean; // Whether the event is a penalty
+  clockDisplay?: string; // E.g. "45+2"
 }
 
 export interface MatchStats {
@@ -79,6 +80,7 @@ export interface Match {
   status: 'upcoming' | 'live' | 'completed';
   homePenaltyScore?: number; // For matches decided by penalties
   awayPenaltyScore?: number; // For matches decided by penalties
+  clock?: string; // Live match clock (e.g. 34')
   minute?: number; // E.g., 45 (or 45+2), undefined if not live
   datetime: string; // ISO 8601 string
   group: string; // E.g., "Group A"
