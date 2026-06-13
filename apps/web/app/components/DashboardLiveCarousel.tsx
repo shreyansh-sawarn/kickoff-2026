@@ -40,7 +40,7 @@ export function DashboardLiveCarousel({
               >
                 <div className="absolute top-3 right-3 bg-rose-500/20 border border-rose-500/40 text-rose-400 text-[10px] px-2.5 py-0.5 rounded-full font-bold flex items-center space-x-1 animate-pulse">
                   <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
-                  <span>{match.minute}'</span>
+                  <span>{match.clock || `${match.minute}'`}</span>
                 </div>
                 
                 <div className="p-6 flex flex-col justify-between h-full">
@@ -58,7 +58,7 @@ export function DashboardLiveCarousel({
                     {/* Scoreline */}
                     <div className="flex flex-col items-center px-4">
                       <span className="text-2xl md:text-3xl font-black text-white tracking-widest bg-slate-950/40 px-4 py-2 rounded-xl border border-slate-800">
-                        {match.homeScore} : {match.awayScore}
+                        {match.homeScore ?? 0} : {match.awayScore ?? 0}
                       </span>
                       <span className="text-[10px] text-emerald-400 font-bold uppercase mt-2 tracking-wider">{t("live")}</span>
                     </div>

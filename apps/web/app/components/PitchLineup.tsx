@@ -44,15 +44,25 @@ export default function PitchLineup({ match }: PitchLineupProps) {
 
   // Helper to find substitution events
   const getSubOutEvent = (playerId: string) => {
-    return match.events?.find(e => e.type === "substitution" && e.playerOne === playerId);
+    // playerTwo is the player who goes OUT
+    return match.events?.find(e => e.type === "substitution" && e.playerTwo === playerId);
   };
   const getSubInEvent = (playerId: string) => {
-    return match.events?.find(e => e.type === "substitution" && e.playerTwo === playerId);
+    // playerOne is the player who comes IN
+    return match.events?.find(e => e.type === "substitution" && e.playerOne === playerId);
+  };
+  const getRedCardEvent = (playerId: string) => {
+    return match.events?.find(e => e.type === "card_red" && e.playerOne === playerId);
+  };
+  const getYellowCards = (playerId: string) => {
+    return match.events?.filter(e => e.type === "card_yellow" && e.playerOne === playerId) || [];
   };
 
   const renderPlayerNode = (player: any, isHome: boolean, isSub = false) => {
     const subOut = getSubOutEvent(player.name);
     const subIn = getSubInEvent(player.name);
+    const redCard = getRedCardEvent(player.name);
+    const yellowCards = getYellowCards(player.name);
     
     return (
       <div key={player.id} className="flex flex-col items-center relative z-10 mx-1 my-1 flex-1">
@@ -64,14 +74,25 @@ export default function PitchLineup({ match }: PitchLineupProps) {
           </div>
           {/* Sub Out Icon (Red) */}
           {subOut && (
-            <div className="absolute -bottom-1 -left-2 bg-[#131b2e] rounded-full">
-               <span className="text-red-500 text-[10px]">🔴</span>
+            <div className="absolute -bottom-1 -left-2 bg-[#131b2e] rounded-full border border-slate-700 w-4 h-4 flex items-center justify-center shadow">
+               <span className="text-red-500 text-[10px] leading-none">⬇</span>
             </div>
           )}
           {/* Sub In Icon (Green) */}
           {subIn && (
-            <div className="absolute -bottom-1 -left-2 bg-[#131b2e] rounded-full">
-               <span className="text-emerald-500 text-[10px]">🟢</span>
+            <div className="absolute -bottom-1 -left-2 bg-[#131b2e] rounded-full border border-slate-700 w-4 h-4 flex items-center justify-center shadow">
+               <span className="text-emerald-500 text-[10px] leading-none">⬆</span>
+            </div>
+          )}
+          {/* Card Icons */}
+          {(redCard || yellowCards.length > 0) && (
+            <div className="absolute -top-1 -right-1 flex space-x-0.5">
+              {yellowCards.map((_, i) => (
+                <div key={`y-${i}`} className="w-2 h-3 bg-[#f5a623] rounded-[1px] shadow-sm border border-slate-800" />
+              ))}
+              {redCard && (
+                <div className="w-2 h-3 bg-[#e53e3e] rounded-[1px] shadow-sm border border-slate-800" />
+              )}
             </div>
           )}
         </div>
@@ -189,6 +210,8 @@ export default function PitchLineup({ match }: PitchLineupProps) {
           <div className="space-y-3">
             {(selectedTeam === "home" ? homeLineup.substitutes : awayLineup.substitutes).map(player => {
               const subIn = getSubInEvent(player.name);
+              const redCard = getRedCardEvent(player.name);
+              const yellowCards = getYellowCards(player.name);
               
               return (
                 <div key={player.id} className="flex justify-between items-center py-1 border-b border-slate-800/50 last:border-0">
@@ -197,11 +220,23 @@ export default function PitchLineup({ match }: PitchLineupProps) {
                       {player.number}
                     </span>
                     <div>
-                      <div className="font-bold text-sm text-slate-200">{player.name}</div>
+                      <div className="font-bold text-sm text-slate-200 flex items-center">
+                        <span>{player.name}</span>
+                        {(redCard || yellowCards.length > 0) && (
+                          <div className="flex space-x-0.5 ml-2">
+                            {yellowCards.map((_, i) => (
+                              <div key={`ysub-${i}`} className="w-2 h-[10px] bg-[#f5a623] rounded-[1px] shadow-sm" />
+                            ))}
+                            {redCard && (
+                              <div className="w-2 h-[10px] bg-[#e53e3e] rounded-[1px] shadow-sm" />
+                            )}
+                          </div>
+                        )}
+                      </div>
                       {subIn && (
                         <div className="text-[10px] text-emerald-400 font-semibold flex items-center mt-0.5">
-                          <span className="mr-1">🟢 {subIn.minute}'</span>
-                          <span className="text-slate-500">In for {subIn.playerOne}</span>
+                          <span className="mr-1 text-emerald-500">⬆ {subIn.clockDisplay || subIn.minute}'</span>
+                          <span className="text-slate-500 ml-1">In for {subIn.playerTwo}</span>
                         </div>
                       )}
                     </div>

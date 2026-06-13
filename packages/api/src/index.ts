@@ -127,7 +127,8 @@ export async function getMatches(): Promise<Match[]> {
           playerTwo: extraData.playerTwo || undefined,
           score: extraData.score || undefined,
           isPenalty: extraData.isPenalty || false,
-          isShootoutPenalty: extraData.isShootoutPenalty || false
+          isShootoutPenalty: extraData.isShootoutPenalty || false,
+          clockDisplay: extraData.clockDisplay || undefined
         };
       }).sort((a: any, b: any) => a.minute - b.minute);
 
@@ -146,6 +147,13 @@ export async function getMatches(): Promise<Match[]> {
         else mappedGroup = "r32";
       }
 
+      const matchDatetime = m.kickoff_utc.endsWith('Z') ? m.kickoff_utc : `${m.kickoff_utc.replace(' ', 'T')}Z`;
+      let minute = undefined;
+      if (status === "live") {
+        const diffMs = Date.now() - new Date(matchDatetime).getTime();
+        minute = Math.min(90, Math.max(1, Math.floor(diffMs / 60000)));
+      }
+
       return {
         id: m.id,
         homeTeam: home || { id: "tbd", name: m.home_team || "TBD", code: "TBD", flag: "🏳️", confederation: "TBD", group: "TBD" },
@@ -155,7 +163,9 @@ export async function getMatches(): Promise<Match[]> {
         awayScore: m.away_score,
         homePenaltyScore: homePenaltyScore > 0 || awayPenaltyScore > 0 ? homePenaltyScore : undefined,
         awayPenaltyScore: homePenaltyScore > 0 || awayPenaltyScore > 0 ? awayPenaltyScore : undefined,
-        datetime: m.kickoff_utc.endsWith('Z') ? m.kickoff_utc : `${m.kickoff_utc.replace(' ', 'T')}Z`,
+        clock: m.clock,
+        datetime: matchDatetime,
+        minute,
         group: mappedGroup,
         stadium: stadiumInfo.name,
         city: stadiumInfo.city,

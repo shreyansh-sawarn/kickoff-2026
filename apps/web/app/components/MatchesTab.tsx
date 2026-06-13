@@ -22,6 +22,39 @@ const FlagOrShield = ({ code, className = "" }: { code: string; className?: stri
   );
 };
 
+const getKnockoutTag = (match: Match): string | null => {
+  const id = match.id.toLowerCase();
+  
+  if (id.includes("match_104") || id === "final" || id.includes("winner_match_101")) {
+    return "Final";
+  }
+  if (id.includes("match_103") || id === "3rd" || id.includes("loser_match_101")) {
+    return "Third Place";
+  }
+  if (id.includes("winner_match_97_v_winner_match_98") || id === "sf1") {
+    return "Semifinal 1";
+  }
+  if (id.includes("winner_match_99_v_winner_match_100") || id === "sf2") {
+    return "Semifinal 2";
+  }
+  
+  // Quarterfinals
+  if (id.includes("winner_match_89_v_winner_match_90")) {
+    return "Quarterfinal 1";
+  }
+  if (id.includes("winner_match_93_v_winner_match_94")) {
+    return "Quarterfinal 2";
+  }
+  if (id.includes("winner_match_91_v_winner_match_92")) {
+    return "Quarterfinal 3";
+  }
+  if (id.includes("winner_match_95_v_winner_match_96")) {
+    return "Quarterfinal 4";
+  }
+  
+  return null;
+};
+
 interface MatchesTabProps {
   matches: Match[];
   liveMatches: Match[];
@@ -127,7 +160,7 @@ export default function MatchesTab({
       >
         <div className="flex flex-col text-center sm:text-left sm:w-[30%]">
           <span className="text-xs text-slate-400 font-semibold">{match.group}</span>
-          <span className="text-[10px] text-slate-500 flex items-center justify-center sm:justify-start mt-0.5 truncate">
+          <span className="text-[10px] text-slate-505 flex items-center justify-center sm:justify-start mt-0.5 truncate">
             <MapPin className="w-3 h-3 mr-1 shrink-0" /> <span className="truncate">{match.stadium}</span>
           </span>
         </div>
@@ -142,7 +175,7 @@ export default function MatchesTab({
           <div className="w-[80px] sm:w-[100px] flex justify-center shrink-0">
             {isLive ? (
               <span className="text-xs font-bold text-rose-400 bg-rose-500/10 px-3 py-1.5 rounded-lg border border-rose-500/20 animate-pulse whitespace-nowrap">
-                LIVE {match.minute}'
+                LIVE {match.clock || `${match.minute}'`}
               </span>
             ) : isUpcoming ? (
               <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-lg border border-emerald-500/20 whitespace-nowrap">
@@ -171,15 +204,29 @@ export default function MatchesTab({
           </div>
         </div>
 
-        <div className="text-center sm:text-right border-t sm:border-t-0 sm:border-l border-slate-800/80 pt-3 sm:pt-0 sm:pl-6 w-full sm:w-[25%] flex flex-col sm:items-end">
+        <div className="text-center sm:text-right border-t sm:border-t-0 sm:border-l border-slate-800/80 pt-3 sm:pt-0 sm:pl-6 w-full sm:w-[25%] flex flex-col sm:items-end min-h-[36px] justify-center">
           {isUpcoming ? (
             <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">
               {formatMatchDate(match.datetime)}
             </span>
           ) : (
-            <span className="text-[10px] text-amber-400 font-bold uppercase tracking-widest block bg-amber-400/5 px-2 py-0.5 rounded border border-amber-400/10">
-              {isLive ? t("live") : t("final")}
-            </span>
+            isLive ? (
+              <span className="text-[10px] text-rose-450 font-bold uppercase tracking-widest block bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/20 animate-pulse">
+                {t("live")}
+              </span>
+            ) : (
+              (() => {
+                const koTag = getKnockoutTag(match);
+                if (koTag) {
+                  return (
+                    <span className="text-[10px] text-amber-400 font-bold uppercase tracking-widest block bg-amber-400/5 px-2 py-0.5 rounded border border-amber-400/10 whitespace-nowrap">
+                      {koTag}
+                    </span>
+                  );
+                }
+                return null;
+              })()
+            )
           )}
         </div>
       </div>
@@ -211,8 +258,8 @@ export default function MatchesTab({
 
       {/* Matches Content List Display */}
       <div className="space-y-6">
-        {/* Render Live Block on top (only shown in date view when there are active live matches) */}
-        {groupBy === "date" && liveMatches.length > 0 && dateFilter === "upcoming" && (
+        {/* Render Live Block on top (shown always when there are active live matches) */}
+        {liveMatches.length > 0 && (
           <div className="space-y-4">
             <div className="text-xs font-bold uppercase tracking-wider text-rose-400 flex items-center">
               <span className="w-2.5 h-2.5 rounded-full bg-rose-400 mr-2 animate-pulse"></span>
@@ -228,7 +275,7 @@ export default function MatchesTab({
                   <div className="flex justify-between items-center mb-4">
                     <span className="text-xs text-slate-400 font-semibold">{match.group}</span>
                     <span className="bg-rose-500/10 text-rose-400 border border-rose-500/20 text-[10px] font-bold px-2 py-0.5 rounded-full animate-pulse">
-                      {t("live")} {match.minute}'
+                      {t("live")} {match.clock || `${match.minute}'`}
                     </span>
                   </div>
                   <div className="flex items-center justify-between my-2">
@@ -239,7 +286,7 @@ export default function MatchesTab({
                       <span className="font-bold text-slate-100 truncate w-full text-left">{match.homeTeam.name}</span>
                     </div>
                     <span className="text-2xl font-black text-white px-4 py-2 rounded-xl bg-slate-950/40 border border-slate-850">
-                      {match.homeScore} : {match.awayScore}
+                      {match.homeScore ?? 0} : {match.awayScore ?? 0}
                     </span>
                     <div className="flex items-center space-x-3 w-1/3 justify-end text-right min-w-0">
                       <span className="font-bold text-slate-100 truncate w-full text-right">{match.awayTeam.name}</span>
