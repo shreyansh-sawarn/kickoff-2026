@@ -107,6 +107,40 @@ export default function MatchDetails() {
             };
           }
 
+          // Identify own goals dynamically
+          if (data.lineups && data.events) {
+            const homePlayers = new Set(
+              [
+                ...(data.lineups.home?.startingXI || []),
+                ...(data.lineups.home?.substitutes || []),
+              ].map((p: any) => p.name.trim().toLowerCase())
+            );
+            const awayPlayers = new Set(
+              [
+                ...(data.lineups.away?.startingXI || []),
+                ...(data.lineups.away?.substitutes || []),
+              ].map((p: any) => p.name.trim().toLowerCase())
+            );
+
+            data.events = data.events.map((event: any) => {
+              if (event.type === "goal") {
+                const pName = (event.playerOne || "").trim().toLowerCase();
+                const isHomeEvent = event.teamId.toLowerCase() === data.homeTeam.code.toLowerCase();
+                const isAwayEvent = event.teamId.toLowerCase() === data.awayTeam.code.toLowerCase();
+
+                // If it's a home goal event, but the player is in the away lineup: own goal
+                if (isHomeEvent && awayPlayers.has(pName)) {
+                  return { ...event, type: "own_goal" };
+                }
+                // If it's an away goal event, but the player is in the home lineup: own goal
+                if (isAwayEvent && homePlayers.has(pName)) {
+                  return { ...event, type: "own_goal" };
+                }
+              }
+              return event;
+            });
+          }
+
           setMatch(data);
         }
       } catch (err) {
@@ -186,7 +220,7 @@ export default function MatchDetails() {
           
           <div className="flex items-center space-x-2 text-xs font-bold text-slate-400 uppercase tracking-widest mb-6">
             <MapPin className="w-3.5 h-3.5 mr-1" />
-            <span>{match.stadium}, {match.city}</span>
+            <span>{match.stadium}</span>
           </div>
 
           <div className="flex items-center justify-between w-full max-w-2xl my-4">
@@ -326,10 +360,10 @@ export default function MatchDetails() {
                       let awayPoss = parseInt(String(match.stats!.possession.away).replace('%', '')) || 0;
                       
                       if (statsPeriod === "1ST") {
-                        homePoss = Math.min(100, Math.round(homePoss * 1.05));
+                        homePoss = Math.max(0, Math.round(homePoss * 0.95));
                         awayPoss = 100 - homePoss;
                       } else if (statsPeriod === "2ND") {
-                        homePoss = Math.max(0, Math.round(homePoss * 0.95));
+                        homePoss = Math.min(100, Math.round(homePoss * 1.05));
                         awayPoss = 100 - homePoss;
                       }
 
@@ -365,11 +399,11 @@ export default function MatchDetails() {
                     
                     // Mock data derivation for 1st/2nd half tabs since we only have total stats
                     if (statsPeriod === "1ST") {
-                      homeVal = Math.floor(homeVal * 0.4);
-                      awayVal = Math.floor(awayVal * 0.4);
-                    } else if (statsPeriod === "2ND") {
                       homeVal = Math.ceil(homeVal * 0.6);
                       awayVal = Math.ceil(awayVal * 0.6);
+                    } else if (statsPeriod === "2ND") {
+                      homeVal = Math.floor(homeVal * 0.4);
+                      awayVal = Math.floor(awayVal * 0.4);
                     }
 
                     const total = homeVal + awayVal || 1;
@@ -421,19 +455,19 @@ export default function MatchDetails() {
                         <div 
                           key={event.id}
                           className={`flex flex-col sm:flex-row items-center justify-between ${
-                            isHome ? "sm:flex-row-reverse" : ""
+                            isHome ? "" : "sm:flex-row-reverse"
                           }`}
                         >
                           {/* Event Text Side */}
                           <div className={`w-full sm:w-[45%] flex ${
-                            isHome ? "justify-start sm:text-left" : "justify-end text-right"
+                            isHome ? "justify-end text-right" : "justify-start sm:text-left"
                           } mb-2 sm:mb-0`}>
                             <div className="bg-slate-900/60 border border-slate-800/80 p-3.5 rounded-xl max-w-xs shadow-md">
                               <div className="flex items-center space-x-2">
                                 <span className="font-extrabold text-sm text-white">
                                   {event.playerOne}
                                 </span>
-                                {event.type === "goal" && (
+                                 {event.type === "goal" && (
                                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="ml-1.5 shrink-0 shadow-sm rounded-full bg-white">
                                     <defs>
                                       <clipPath id="ball-clip">
@@ -452,6 +486,25 @@ export default function MatchDetails() {
                                     <circle cx="12" cy="12" r="11" stroke="#64748b" strokeWidth="1.5" />
                                   </svg>
                                 )}
+                                {event.type === "own_goal" && (
+                                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="ml-1.5 shrink-0 shadow-sm rounded-full bg-white">
+                                     <defs>
+                                       <clipPath id="og-ball-clip-page">
+                                         <circle cx="12" cy="12" r="11" />
+                                       </clipPath>
+                                     </defs>
+                                     <circle cx="12" cy="12" r="11" fill="#fee2e2" />
+                                     <g clipPath="url(#og-ball-clip-page)">
+                                       <path d="M -2 4 Q 10 12 2 22" fill="none" stroke="#ef4444" strokeWidth="4.5" />
+                                       <path d="M 26 4 Q 14 12 22 22" fill="none" stroke="#dc2626" strokeWidth="4.5" />
+                                       <path d="M 4 24 Q 12 15 20 24" fill="none" stroke="#b91c1c" strokeWidth="4.5" />
+                                       <path d="M 8 4 Q 12 10 16 4" fill="none" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" />
+                                       <path d="M 4 18 Q 12 14 20 18" fill="none" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" />
+                                       <path d="M 12 10 L 12 14" fill="none" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" />
+                                     </g>
+                                     <circle cx="12" cy="12" r="11" stroke="#dc2626" strokeWidth="1.5" />
+                                   </svg>
+                                )}
                                 {event.type === "card_yellow" && <div className="w-2.5 h-[14px] bg-[#f5a623] rounded-[2px] ml-2 shrink-0 shadow-sm" />}
                                 {event.type === "card_red" && <div className="w-2.5 h-[14px] bg-[#e53e3e] rounded-[2px] ml-2 shrink-0 shadow-sm" />}
                                 {event.type === "substitution" && <span className="text-xs text-emerald-450 ml-1.5 shrink-0">🔄</span>}
@@ -466,6 +519,12 @@ export default function MatchDetails() {
                               {event.isPenalty && (
                                 <span className="text-[10px] text-slate-400 block mt-1">
                                   Penalty Goal
+                                </span>
+                              )}
+
+                              {event.type === "own_goal" && (
+                                <span className="text-[10px] text-slate-400 block mt-1">
+                                  Own Goal
                                 </span>
                               )}
                               

@@ -37,7 +37,7 @@ export interface MatchScorer {
 
 export interface MatchEvent {
   id: string;
-  type: 'goal' | 'card_yellow' | 'card_red' | 'substitution';
+  type: 'goal' | 'card_yellow' | 'card_red' | 'substitution' | 'own_goal';
   minute: number;
   teamId: string;
   playerOne: string; // Scorer, carded player, player off
@@ -89,6 +89,8 @@ export interface Match {
   scorers: MatchScorer[];
   events: MatchEvent[];
   stats?: MatchStats;
+  home_formation?: string;
+  away_formation?: string;
   lineups?: {
     home: MatchLineup;
     away: MatchLineup;

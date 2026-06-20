@@ -1,5 +1,5 @@
 import React from "react";
-import { Match, Group } from "@wc26/types";
+import { Match, Group, PlayerLeaderboards } from "@wc26/types";
 import { getFlagCdnUrl, formatMatchTime, formatMatchDate } from "@wc26/utils";
 import { DashboardFavorites } from "./DashboardFavorites";
 import { DashboardLiveCarousel, DashboardNewsCarousel } from "./DashboardLiveCarousel";
@@ -10,6 +10,7 @@ interface DashboardTabProps {
   liveMatches: Match[];
   upcomingMatches: Match[];
   standings: Group[];
+  players: PlayerLeaderboards | null;
   favorites: string[];
   t: (key: string) => string;
   router: { push: (url: string) => void };
@@ -21,11 +22,14 @@ export default function DashboardTab({
   liveMatches,
   upcomingMatches,
   standings,
+  players,
   favorites,
   t,
   router,
   setActiveTab
 }: DashboardTabProps) {
+  const topScorer = players?.goals && players.goals.length > 0 ? players.goals[0] : null;
+
   return (
     <div className="space-y-8">
       {/* Pinned Starred Teams Feeds */}
@@ -101,11 +105,15 @@ export default function DashboardTab({
           className="bg-gradient-to-tr from-emerald-500/10 to-slate-900/60 border border-emerald-500/10 hover:border-emerald-500/30 p-4 rounded-2xl cursor-pointer hover:shadow-lg transition duration-300 flex items-center justify-between group"
         >
           <div className="space-y-1">
-            <span className="text-[10px] text-slate-450 font-extrabold uppercase tracking-wider block">Top Scorer</span>
-            <div className="font-extrabold text-white text-sm group-hover:text-emerald-400 transition">TBD</div>
-            <span className="text-[10px] text-slate-505 font-semibold block">0 Goals</span>
+            <span className="text-[10px] text-slate-455 font-extrabold uppercase tracking-wider block">Top Scorer</span>
+            <div className="font-extrabold text-white text-sm group-hover:text-emerald-400 transition">
+              {topScorer ? topScorer.name : "TBD"}
+            </div>
+            <span className="text-[10px] text-slate-505 font-semibold block">
+              {topScorer ? `${topScorer.tournamentStats.goals} Goals` : "0 Goals"}
+            </span>
           </div>
-          <span className="text-2xl filter drop-shadow group-hover:scale-110 transition duration-300">⚽</span>
+          <img src="/custom-ball.svg" alt="Top Scorer Ball" className="w-8 h-8 filter drop-shadow group-hover:scale-110 transition duration-300 object-contain" />
         </div>
 
         {/* Card 2: Knockout Stage */}
