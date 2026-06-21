@@ -136,8 +136,28 @@ export function useDashboard() {
     }
   };
 
+  const fetchMatchesSilently = async () => {
+    try {
+      const m = await getMatches();
+      setMatches(m);
+    } catch (err) {
+      console.error("Silent matches refresh failed:", err);
+    }
+  };
+
   useEffect(() => {
     fetchData();
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    // Poll matches silently every 15 seconds in the background
+    const interval = setInterval(() => {
+      fetchMatchesSilently();
+    }, 15000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const toggleFavorite = (teamId: string) => {

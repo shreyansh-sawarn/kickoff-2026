@@ -82,7 +82,7 @@ export async function getMatches(): Promise<Match[]> {
   const baseUrl = (process as any).env.WC26_API_BASE_URL || "https://kickoff-2026-api.fly.dev/api/v1";
 
   try {
-    const res = await fetch(`${baseUrl}/matches`);
+    const res = await fetch(`${baseUrl}/matches`, { cache: "no-store" });
 
     if (!res.ok) throw new Error("API error");
     
@@ -446,7 +446,7 @@ export async function getMatchLineups(matchId: string): Promise<any> {
 
   const baseUrl = (process as any).env.WC26_API_BASE_URL || "https://kickoff-2026-api.fly.dev/api/v1";
   try {
-    const res = await fetch(`${baseUrl}/matches/${matchId}/lineups`);
+    const res = await fetch(`${baseUrl}/matches/${matchId}/lineups`, { cache: "no-store" });
     if (res.ok) {
       return await res.json();
     }
@@ -470,7 +470,7 @@ export async function getMatchStats(matchId: string): Promise<any> {
 
   const baseUrl = (process as any).env.WC26_API_BASE_URL || "https://kickoff-2026-api.fly.dev/api/v1";
   try {
-    const res = await fetch(`${baseUrl}/matches/${matchId}/stats`);
+    const res = await fetch(`${baseUrl}/matches/${matchId}/stats`, { cache: "no-store" });
     if (res.ok) {
       return await res.json();
     }

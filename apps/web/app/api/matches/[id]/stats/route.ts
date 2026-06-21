@@ -1,13 +1,15 @@
 import { NextResponse } from "next/server";
 import { getMatchStats } from "@wc26/api";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const headers = {
     "Content-Type": "application/json",
-    "Cache-Control": "public, s-maxage=60, stale-while-revalidate=30",
+    "Cache-Control": "no-store, max-age=0, must-revalidate",
   };
 
   try {
