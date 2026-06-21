@@ -481,14 +481,18 @@ export function parseHistoricalData(data: any) {
         }
 
         let winner = undefined;
-        if (m.score && m.score.ft) {
-          const s1 = m.score.ft[0];
-          const s2 = m.score.ft[1];
-          if (s1 > s2) winner = m.team1;
-          else if (s2 > s1) winner = m.team2;
-          else if (m.score.p) {
-            winner = m.score.p[0] > m.score.p[1] ? m.team1 : m.team2;
-          }
+        let s1 = m.score && m.score.ft ? m.score.ft[0] : 0;
+        let s2 = m.score && m.score.ft ? m.score.ft[1] : 0;
+        if (m.score && m.score.et) {
+          s1 = m.score.et[0];
+          s2 = m.score.et[1];
+        }
+        if (s1 > s2) {
+          winner = m.team1;
+        } else if (s2 > s1) {
+          winner = m.team2;
+        } else if (m.score && m.score.p) {
+          winner = m.score.p[0] > m.score.p[1] ? m.team1 : m.team2;
         }
 
         knockoutRounds[targetRound].push({

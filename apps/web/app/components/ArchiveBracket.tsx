@@ -12,9 +12,10 @@ export function ArchiveBracket({ knockout }: ArchiveBracketProps) {
   const WORLD_W = 2450;
   const WORLD_H = 750;
 
-  const [zoom, setZoom]           = useState(0.5);
+  const [zoom, setZoom] = useState(0.5);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [isDragging, setIsDragging]     = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [hoveredTeam, setHoveredTeam] = useState<string | null>(null);
 
   const viewportRef = useRef<HTMLDivElement>(null);
   const dragOrigin = useRef({ x: 0, y: 0, scrollLeft: 0, scrollTop: 0 });
@@ -60,11 +61,11 @@ export function ArchiveBracket({ knockout }: ArchiveBracketProps) {
       if (dw < 25 && dh < 25 && lastSize.current.width > 0) {
         return;
       }
-      
+
       lastSize.current = { width: vw, height: vh };
       const fitZ = Math.min(1.0, Math.max(0.15, (vw - 48) / WORLD_W));
       setZoom(fitZ);
-      
+
       setTimeout(() => {
         if (el) {
           const scrollW = WORLD_W * fitZ;
@@ -88,7 +89,7 @@ export function ArchiveBracket({ knockout }: ArchiveBracketProps) {
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
       const factor = e.deltaY < 0 ? 1.08 : 1 / 1.08;
-      const rect   = el.getBoundingClientRect();
+      const rect = el.getBoundingClientRect();
       const mx = e.clientX - rect.left;
       const my = e.clientY - rect.top;
 
@@ -100,11 +101,11 @@ export function ArchiveBracket({ knockout }: ArchiveBracketProps) {
       const worldY = (my + el.scrollTop) / prevZ;
 
       setZoom(nextZ);
-      
+
       setTimeout(() => {
         if (el) {
           el.scrollLeft = worldX * nextZ - mx;
-          el.scrollTop  = worldY * nextZ - my;
+          el.scrollTop = worldY * nextZ - my;
         }
       }, 0);
     };
@@ -130,18 +131,18 @@ export function ArchiveBracket({ knockout }: ArchiveBracketProps) {
     const dx = e.clientX - dragOrigin.current.x;
     const dy = e.clientY - dragOrigin.current.y;
     viewportRef.current.scrollLeft = dragOrigin.current.scrollLeft - dx;
-    viewportRef.current.scrollTop  = dragOrigin.current.scrollTop - dy;
+    viewportRef.current.scrollTop = dragOrigin.current.scrollTop - dy;
   };
 
-  const handleMouseUp    = () => setIsDragging(false);
+  const handleMouseUp = () => setIsDragging(false);
   const handleMouseLeave = () => setIsDragging(false);
 
   const zoomBy = (factor: number) => {
     if (!viewportRef.current) return;
     const el = viewportRef.current;
-    const cx = el.clientWidth  / 2;
+    const cx = el.clientWidth / 2;
     const cy = el.clientHeight / 2;
-    
+
     const prevZ = zoom;
     const nextZ = Math.min(2.5, Math.max(0.12, prevZ * factor));
     if (nextZ === prevZ) return;
@@ -150,54 +151,176 @@ export function ArchiveBracket({ knockout }: ArchiveBracketProps) {
     const worldY = (cy + el.scrollTop) / prevZ;
 
     setZoom(nextZ);
-    
+
     setTimeout(() => {
       if (el) {
         el.scrollLeft = worldX * nextZ - cx;
-        el.scrollTop  = worldY * nextZ - cy;
+        el.scrollTop = worldY * nextZ - cy;
       }
     }, 0);
   };
 
   const handleDoubleClick = () => resetView();
 
+  // Helper to reorder matches based on team progression
+  const sortedKnockout = (() => {
+    if (!knockout || knockout.length === 0) return [];
+
+    const findRound = (names: string[]) => {
+      return knockout.find(r => names.some(name => {
+        const rNameNorm = r.roundName.toLowerCase().replace(/[^a-z0-9]/g, "");
+        const targetNorm = name.toLowerCase().replace(/[^a-z0-9]/g, "");
+        if (targetNorm === "final") {
+          return rNameNorm === "final" || (rNameNorm.includes("final") && !rNameNorm.includes("quarter") && !rNameNorm.includes("semi"));
+        }
+        return rNameNorm.includes(targetNorm);
+      }));
+    };
+
+    const r16Round = findRound(["roundof16", "r16"]);
+    const qfRound = findRound(["quarter", "qf"]);
+    const sfRound = findRound(["semi", "sf"]);
+    const finalRound = findRound(["final"]);
+
+    const r16 = r16Round?.matches || [];
+    const qf = qfRound?.matches || [];
+    const sf = sfRound?.matches || [];
+    const finalAndThird = finalRound?.matches || [];
+
+    let sortedR16 = [...r16];
+    let sortedQF = [...qf];
+    let sortedSF = [...sf];
+
+    const matchContainsTeam = (match: KnockoutMatch, teamName: string) => {
+      const norm = (s: string) => s.toLowerCase().trim();
+      return norm(match.homeTeam) === norm(teamName) || norm(match.awayTeam) === norm(teamName);
+    };
+
+    const matchContainsWinner = (match: KnockoutMatch, sourceMatches: KnockoutMatch[]) => {
+      return sourceMatches.some(src => src.winner && matchContainsTeam(match, src.winner));
+    };
+
+    if (r16.length === 8 && qf.length === 4) {
+      // QF 0 (Left 0): winner of R16 0 or R16 1 (Netherlands vs Argentina)
+      // QF 1 (Left 1): winner of R16 4 or R16 5 (Croatia vs Brazil)
+      // QF 2 (Right 0): winner of R16 2 or R16 3 (England vs France)
+      // QF 3 (Right 1): winner of R16 6 or R16 7 (Morocco vs Portugal)
+      const qf0 = qf.find(m => matchContainsWinner(m, [r16[0], r16[1]]));
+      const qf1 = qf.find(m => matchContainsWinner(m, [r16[4], r16[5]]));
+      const qf2 = qf.find(m => matchContainsWinner(m, [r16[2], r16[3]]));
+      const qf3 = qf.find(m => matchContainsWinner(m, [r16[6], r16[7]]));
+
+      if (qf0 && qf1 && qf2 && qf3) {
+        sortedQF = [qf0, qf1, qf2, qf3];
+      }
+    }
+
+    if (sortedQF.length === 4 && sf.length === 2) {
+      // SF 0 (Left): winner of QF 0 or QF 1 (Argentina vs Croatia)
+      // SF 1 (Right): winner of QF 2 or QF 3 (France vs Morocco)
+      const sf0 = sf.find(m => matchContainsWinner(m, [sortedQF[0], sortedQF[1]]));
+      const sf1 = sf.find(m => matchContainsWinner(m, [sortedQF[2], sortedQF[3]]));
+
+      if (sf0 && sf1) {
+        sortedSF = [sf0, sf1];
+      }
+    } else if (r16.length === 0 && qf.length === 4 && sf.length === 2) {
+      const sf0 = sf.find(m => matchContainsWinner(m, [qf[0], qf[1]]));
+      const sf1 = sf.find(m => matchContainsWinner(m, [qf[2], qf[3]]));
+      if (sf0 && sf1) {
+        sortedSF = [sf0, sf1];
+      }
+    }
+
+    return [
+      { roundName: r16Round?.roundName || "Round of 16", matches: sortedR16 },
+      { roundName: qfRound?.roundName || "Quarter-finals", matches: sortedQF },
+      { roundName: sfRound?.roundName || "Semi-finals", matches: sortedSF },
+      { roundName: finalRound?.roundName || "Final", matches: finalAndThird }
+    ];
+  })();
+
+  const r16Matches = sortedKnockout[0]?.matches || [];
+  const qfMatches = sortedKnockout[1]?.matches || [];
+  const sfMatches = sortedKnockout[2]?.matches || [];
+  const finalMatches = sortedKnockout[3]?.matches || [];
+
+  const leftR16 = r16Matches.length === 8
+    ? [r16Matches[0], r16Matches[1], r16Matches[4], r16Matches[5]]
+    : r16Matches.slice(0, 4);
+
+  const rightR16 = r16Matches.length === 8
+    ? [r16Matches[2], r16Matches[3], r16Matches[6], r16Matches[7]]
+    : r16Matches.slice(4, 8);
+
   const columns = [
     {
       title: "Round of 16",
       key: "r16-left",
-      matches: knockout[0]?.matches.slice(0, 4) || [],
+      matches: leftR16,
     },
     {
       title: "Quarterfinals",
       key: "qf-left",
-      matches: knockout[1]?.matches.slice(0, 2) || [],
+      matches: qfMatches.slice(0, 2),
     },
     {
       title: "Semifinals",
       key: "sf-left",
-      matches: knockout[2]?.matches.slice(0, 1) || [],
+      matches: sfMatches.slice(0, 1),
     },
     {
       title: "Final",
       key: "finals-center",
-      matches: knockout[3]?.matches || [],
+      matches: finalMatches,
     },
     {
       title: "Semifinals",
       key: "sf-right",
-      matches: knockout[2]?.matches.slice(1, 2) || [],
+      matches: sfMatches.slice(1, 2),
     },
     {
       title: "Quarterfinals",
       key: "qf-right",
-      matches: knockout[1]?.matches.slice(2, 4) || [],
+      matches: qfMatches.slice(2, 4),
     },
     {
       title: "Round of 16",
       key: "r16-right",
-      matches: knockout[0]?.matches.slice(4, 8) || [],
+      matches: rightR16,
     }
   ];
+
+  // ── Team path tracing for hover highlighting ──────────────────────
+  const teamPath = (() => {
+    if (!hoveredTeam) return null;
+    const pathMap = new Map<string, 'won' | 'lost' | 'upcoming'>();
+    columns.forEach((column, colIdx) => {
+      column.matches.forEach((match: any, matchIdx: number) => {
+        const isInMatch = match.homeTeam === hoveredTeam || match.awayTeam === hoveredTeam;
+        if (!isInMatch) return;
+        if (match.winner === hoveredTeam) {
+          pathMap.set(`${colIdx}-${matchIdx}`, 'won');
+        } else if (match.winner && match.winner !== hoveredTeam) {
+          pathMap.set(`${colIdx}-${matchIdx}`, 'lost');
+        } else {
+          pathMap.set(`${colIdx}-${matchIdx}`, 'upcoming');
+        }
+      });
+    });
+    return pathMap;
+  })();
+
+  const isConnectorInPath = (colIdx: number, matchIdx: number) => {
+    if (!teamPath) return false;
+    return teamPath.get(`${colIdx}-${matchIdx}`) === 'won';
+  };
+
+  const isFarConnectorInPath = (colIdx: number, evenIdx: number) => {
+    if (!teamPath) return false;
+    return teamPath.get(`${colIdx}-${evenIdx}`) === 'won' ||
+      teamPath.get(`${colIdx}-${evenIdx + 1}`) === 'won';
+  };
 
   const bracketWorld = (
     <div
@@ -221,6 +344,19 @@ export function ArchiveBracket({ knockout }: ArchiveBracketProps) {
         <div className="flex justify-between items-stretch py-6 px-4 space-x-12" style={{ width: `${WORLD_W}px`, height: `${WORLD_H}px` }}>
           {columns.map((column, colIdx) => {
             const N = column.matches.length;
+            if (N === 0) {
+              return (
+                <div key={colIdx} className="flex-1 flex flex-col min-w-[280px] opacity-10">
+                  <div className="text-xs font-black uppercase tracking-widest text-slate-500 text-center mb-6 py-2 bg-slate-900/30 border border-slate-800/30 rounded-xl h-10 flex items-center justify-center shrink-0">
+                    {column.title}
+                  </div>
+                  <div className="relative flex flex-col justify-center items-center h-[600px] text-[10px] font-bold text-slate-600">
+                    Not Played
+                  </div>
+                </div>
+              );
+            }
+
             return (
               <div key={colIdx} className="flex-1 flex flex-col min-w-[280px]">
                 <div className="text-xs font-black uppercase tracking-widest text-slate-300 text-center mb-6 py-2 bg-slate-900/60 border border-slate-800/50 rounded-xl h-10 flex items-center justify-center shrink-0">
@@ -228,19 +364,61 @@ export function ArchiveBracket({ knockout }: ArchiveBracketProps) {
                 </div>
                 <div className="relative flex flex-col" style={{ height: "600px" }}>
                   {column.matches.map((item, idx) => {
-                    const isHomeWinner     = item.winner === item.homeTeam;
-                    const isAwayWinner     = item.winner === item.awayTeam;
-                    const isFinalMatch     = colIdx === 3;
+                    const isHomeWinner = item.winner === item.homeTeam;
+                    const isAwayWinner = item.winner === item.awayTeam;
+                    const isFinalMatch = colIdx === 3;
 
                     let cardBorderClass = "border-slate-800/80 hover:border-slate-700/80";
-                    let cardBgClass     = "bg-[#131b2e]";
+                    let cardBgClass = "bg-[#131b2e]";
                     if (isFinalMatch) {
                       cardBorderClass = "border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.15)] hover:border-amber-400";
-                      cardBgClass     = "bg-[#1c1917]/90";
+                      cardBgClass = "bg-[#1c1917]/90";
                     }
 
-                    const lineHighlightClass = "bg-emerald-500/80";
-                    const lineHoverClass     = `group-hover:bg-emerald-400/90 ${lineHighlightClass} transition-colors duration-300`;
+                    const lineHighlightClass = "bg-slate-700/60";
+                    const lineHoverClass = `group-hover:bg-emerald-400/90 ${lineHighlightClass} transition-colors duration-300`;
+
+                    // Calculate connector line vertical height for this column
+                    const getVH = () => {
+                      if (colIdx === 2 || colIdx === 4) return 600 / 4;
+                      return 600 / (N * 2);
+                    };
+                    const vH = getVH();
+                    const isEven = idx % 2 === 0;
+
+                    const hasDetails = !!item.details;
+                    // Offset to align connectors with the visual center of the match card
+                    const connectorOffset = 10;
+
+                    // ── Path highlighting logic ──────────────────────
+                    const matchKey = `${colIdx}-${idx}`;
+                    const pathStatus = teamPath?.get(matchKey);
+                    const isInPath = !!pathStatus;
+                    const isPathWon = pathStatus === 'won';
+                    const isPathLost = pathStatus === 'lost';
+                    const isDimmed = !!hoveredTeam && !isInPath;
+
+                    // Override card styling for path highlighting
+                    if (isPathWon) {
+                      cardBorderClass = "border-emerald-500/70 shadow-[0_0_20px_rgba(16,185,129,0.3)]";
+                      cardBgClass = "bg-[#0d1f1a]";
+                    } else if (isPathLost) {
+                      cardBorderClass = "border-red-500/60 shadow-[0_0_20px_rgba(239,68,68,0.3)]";
+                      cardBgClass = "bg-[#1f0f0f]";
+                    }
+
+                    // Connector class for outgoing horizontal + vertical from this match
+                    const pathGlow = "bg-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.5)]";
+                    const pathDim = "bg-slate-800/20";
+                    const myConnectorClass = isConnectorInPath(colIdx, idx)
+                      ? pathGlow
+                      : (hoveredTeam ? pathDim : lineHoverClass);
+                    const farConnectorClass = (isEven && isFarConnectorInPath(colIdx, idx))
+                      ? pathGlow
+                      : (hoveredTeam ? pathDim : lineHoverClass);
+                    const sfConnectorClass = isConnectorInPath(colIdx, idx)
+                      ? pathGlow
+                      : (hoveredTeam ? pathDim : lineHoverClass);
 
                     const cardInner = (
                       <div className="flex-1 flex flex-col space-y-1.5 group relative">
@@ -253,55 +431,33 @@ export function ArchiveBracket({ knockout }: ArchiveBracketProps) {
                         {/* Home team */}
                         <div className={`flex justify-between items-center px-3.5 py-2.5 ${cardBgClass} border ${cardBorderClass} rounded-2xl shadow-sm transition-all duration-300`}>
                           <div className="flex items-center space-x-2.5">
-                             <div className="w-6 h-4 relative overflow-hidden rounded-sm shadow-sm shrink-0">
+                            <div className="w-6 h-4 relative overflow-hidden rounded-sm shadow-sm shrink-0">
                               <img src={getFlagCdnUrl(item.homeCode)} alt="" className="w-full h-full object-cover" />
                             </div>
-                            <span className={`text-xs font-semibold ${isHomeWinner ? "text-slate-100 font-extrabold" : "text-slate-400"}`}>{item.homeTeam}</span>
+                            <span
+                              className={`text-xs font-semibold ${isHomeWinner ? "text-slate-100 font-extrabold" : "text-slate-400"} cursor-pointer hover:text-emerald-400 transition-colors duration-200`}
+                              onMouseEnter={() => setHoveredTeam(item.homeTeam)}
+                              onMouseLeave={() => setHoveredTeam(null)}
+                            >
+                              {item.homeTeam}
+                            </span>
                           </div>
                           <span className={`text-xs font-black ${isHomeWinner ? "text-emerald-400" : "text-slate-500"}`}>{item.homeScore}</span>
                         </div>
 
-                        {/* Left-side connector lines */}
-                        {colIdx < 3 && (() => {
-                          let vH = 0;
-                          const isEven = idx % 2 === 0;
-                          if (colIdx === 0) vH = 600 / 8; // 75px
-                          else if (colIdx === 1) vH = 600 / 4; // 150px
-                          const isSemifinal = colIdx === 2;
-
-                          return (
-                            <>
-                              <div style={{ right: "-32px", width: isSemifinal ? "64px" : "32px" }} className={`absolute top-1/2 h-[2px] pointer-events-none ${lineHoverClass}`} />
-                              {vH > 0 && <div style={{ height: `${vH}px`, top: isEven ? "50%" : "auto", bottom: isEven ? "auto" : "50%", right: "-32px", width: "2px" }} className={`absolute pointer-events-none ${lineHoverClass}`} />}
-                              {vH > 0 && isEven && <div style={{ top: `calc(50% + ${vH}px)`, right: "-64px", width: "32px" }} className={`absolute h-[2px] pointer-events-none ${lineHoverClass}`} />}
-                            </>
-                          );
-                        })()}
-
-                        {/* Right-side connector lines */}
-                        {colIdx > 3 && (() => {
-                          let vH = 0;
-                          const isEven = idx % 2 === 0;
-                          if (colIdx === 6) vH = 600 / 8; // 75px
-                          else if (colIdx === 5) vH = 600 / 4; // 150px
-                          const isSemifinal = colIdx === 4;
-
-                          return (
-                            <>
-                              <div style={{ left: "-32px", width: isSemifinal ? "64px" : "32px" }} className={`absolute top-1/2 h-[2px] pointer-events-none ${lineHoverClass}`} />
-                              {vH > 0 && <div style={{ height: `${vH}px`, top: isEven ? "50%" : "auto", bottom: isEven ? "auto" : "50%", left: "-32px", width: "2px" }} className={`absolute pointer-events-none ${lineHoverClass}`} />}
-                              {vH > 0 && isEven && <div style={{ top: `calc(50% + ${vH}px)`, left: "-64px", width: "32px" }} className={`absolute h-[2px] pointer-events-none ${lineHoverClass}`} />}
-                            </>
-                          );
-                        })()}
-
                         {/* Away team */}
                         <div className={`flex justify-between items-center px-3.5 py-2.5 ${cardBgClass} border ${cardBorderClass} rounded-2xl shadow-sm transition-all duration-300`}>
                           <div className="flex items-center space-x-2.5">
-                             <div className="w-6 h-4 relative overflow-hidden rounded-sm shadow-sm shrink-0">
+                            <div className="w-6 h-4 relative overflow-hidden rounded-sm shadow-sm shrink-0">
                               <img src={getFlagCdnUrl(item.awayCode)} alt="" className="w-full h-full object-cover" />
                             </div>
-                            <span className={`text-xs font-semibold ${isAwayWinner ? "text-slate-100 font-extrabold" : "text-slate-400"}`}>{item.awayTeam}</span>
+                            <span
+                              className={`text-xs font-semibold ${isAwayWinner ? "text-slate-100 font-extrabold" : "text-slate-400"} cursor-pointer hover:text-emerald-400 transition-colors duration-200`}
+                              onMouseEnter={() => setHoveredTeam(item.awayTeam)}
+                              onMouseLeave={() => setHoveredTeam(null)}
+                            >
+                              {item.awayTeam}
+                            </span>
                           </div>
                           <span className={`text-xs font-black ${isAwayWinner ? "text-emerald-450" : "text-slate-500"}`}>{item.awayScore}</span>
                         </div>
@@ -315,7 +471,55 @@ export function ArchiveBracket({ knockout }: ArchiveBracketProps) {
                       </div>
                     );
 
-                    return <div key={idx} className="w-full px-2" style={{ height: `${600 / N}px`, display: 'flex', alignItems: 'center' }}>{cardInner}</div>;
+                    if (colIdx < 3) return (
+                      <div key={idx} className={`relative w-full transition-opacity duration-300 ${isDimmed ? "opacity-25" : "opacity-100"}`} style={{ height: `${600 / N}px`, flexShrink: 0 }}>
+                        <div style={{ position: "absolute", top: 0, bottom: 0, left: "40px", right: 0, display: "flex", alignItems: "center", transform: `translateY(${hasDetails ? '17px' : '4px'})` }}>
+                          {cardInner}
+                        </div>
+                        {colIdx === 2 ? (
+                          <>
+                            <div style={{ right: "-24px", width: "24px", top: `calc(50% + ${connectorOffset}px)` }} className={`absolute h-[2px] pointer-events-none transition-all duration-300 ${sfConnectorClass}`} />
+                            <div style={{ height: `${vH}px`, bottom: `calc(50% - ${connectorOffset}px)`, right: "-24px", width: "2px" }} className={`absolute pointer-events-none transition-all duration-300 ${sfConnectorClass}`} />
+                            <div style={{ top: `calc(50% + ${connectorOffset}px - ${vH}px)`, right: "-56px", width: "32px" }} className={`absolute h-[2px] pointer-events-none transition-all duration-300 ${sfConnectorClass}`} />
+                          </>
+                        ) : (
+                          <>
+                            <div style={{ right: "-44px", width: "44px", top: `calc(50% + ${connectorOffset}px)` }} className={`absolute h-[2px] pointer-events-none transition-all duration-300 ${myConnectorClass}`} />
+                            {vH > 0 && <div style={{ height: `${vH}px`, top: isEven ? `calc(50% + ${connectorOffset}px)` : "auto", bottom: isEven ? "auto" : `calc(50% - ${connectorOffset}px)`, right: "-44px", width: "2px" }} className={`absolute pointer-events-none transition-all duration-300 ${myConnectorClass}`} />}
+                            {vH > 0 && isEven && <div style={{ top: `calc(50% + ${connectorOffset}px + ${vH}px)`, right: "-88px", width: "44px" }} className={`absolute h-[2px] pointer-events-none transition-all duration-300 ${farConnectorClass}`} />}
+                          </>
+                        )}
+                      </div>
+                    );
+
+                    if (colIdx > 3) return (
+                      <div key={idx} className={`relative w-full transition-opacity duration-300 ${isDimmed ? "opacity-25" : "opacity-100"}`} style={{ height: `${600 / N}px`, flexShrink: 0 }}>
+                        <div style={{ position: "absolute", top: 0, bottom: 0, left: 0, right: "40px", display: "flex", alignItems: "center", transform: `translateY(${hasDetails ? '17px' : '4px'})` }}>
+                          {cardInner}
+                        </div>
+                        {colIdx === 4 ? (
+                          <>
+                            <div style={{ left: "-24px", width: "24px", top: `calc(50% + ${connectorOffset}px)` }} className={`absolute h-[2px] pointer-events-none transition-all duration-300 ${sfConnectorClass}`} />
+                            <div style={{ height: `${vH}px`, bottom: `calc(50% - ${connectorOffset}px)`, left: "-24px", width: "2px" }} className={`absolute pointer-events-none transition-all duration-300 ${sfConnectorClass}`} />
+                            <div style={{ top: `calc(50% + ${connectorOffset}px - ${vH}px)`, left: "-56px", width: "32px" }} className={`absolute h-[2px] pointer-events-none transition-all duration-300 ${sfConnectorClass}`} />
+                          </>
+                        ) : (
+                          <>
+                            <div style={{ left: "-44px", width: "44px", top: `calc(50% + ${connectorOffset}px)` }} className={`absolute h-[2px] pointer-events-none transition-all duration-300 ${myConnectorClass}`} />
+                            {vH > 0 && <div style={{ height: `${vH}px`, top: isEven ? `calc(50% + ${connectorOffset}px)` : "auto", bottom: isEven ? "auto" : `calc(50% - ${connectorOffset}px)`, left: "-44px", width: "2px" }} className={`absolute pointer-events-none transition-all duration-300 ${myConnectorClass}`} />}
+                            {vH > 0 && isEven && <div style={{ left: "-88px", width: "44px", top: `calc(50% + ${connectorOffset}px + ${vH}px)` }} className={`absolute h-[2px] pointer-events-none transition-all duration-300 ${farConnectorClass}`} />}
+                          </>
+                        )}
+                      </div>
+                    );
+
+                    return (
+                      <div key={idx} className={`w-full px-2 transition-opacity duration-300 ${isDimmed ? "opacity-25" : "opacity-100"}`} style={{ height: `${600 / N}px`, flexShrink: 0, display: "flex", alignItems: "center" }}>
+                        <div style={{ width: "100%", transform: `translateY(${hasDetails ? '17px' : '4px'})` }}>
+                          {cardInner}
+                        </div>
+                      </div>
+                    );
                   })}
                 </div>
               </div>

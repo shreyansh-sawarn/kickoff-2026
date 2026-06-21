@@ -16,7 +16,6 @@ export default function MatchDetails() {
   const [match, setMatch] = useState<Match | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeSubTab, setActiveSubTab] = useState<"lineup" | "stats" | "events">("lineup");
-  const [statsPeriod, setStatsPeriod] = useState<"ALL" | "1ST" | "2ND">("ALL");
 
   useEffect(() => {
     async function loadMatch() {
@@ -63,21 +62,58 @@ export default function MatchDetails() {
                 return 4;
               };
 
+              const getHorizontalWeight = (pos: string) => {
+                if (!pos) return 5;
+                const p = pos.toUpperCase().trim();
+                
+                // Left side
+                if (p.includes("LEFT BACK") || p.includes("LWB") || p.includes("LB") || p.includes("LEFT WING BACK") || p.includes("LEFT DEFENDER")) return 1;
+                if (p.includes("LEFT MIDFIELDER") || p.includes("LM") || p.includes("LEFT MID")) return 1;
+                if (p.includes("LEFT FORWARD") || p.includes("LW") || p.includes("LF") || p.includes("LEFT WINGER")) return 1;
+                
+                // Center-Left
+                if (p.includes("CENTER LEFT DEFENDER") || p.includes("LCB") || p.includes("CENTER LEFT BACK") || p.includes("LEFT CENTER BACK")) return 3;
+                if (p.includes("CENTER LEFT MIDFIELDER") || p.includes("LCM")) return 3;
+                
+                // Center / Defensive / Attacking
+                if (p.includes("DEFENSIVE MIDFIELDER") || p.includes("DM")) return 4.5;
+                if (p.includes("ATTACKING MIDFIELDER") || p.includes("AM")) return 5.5;
+                if (p.includes("CENTER DEFENDER") || p.includes("CB") || p.includes("CENTER BACK") || p.includes("DEFENDER") || p.includes("SWEEPER")) return 5;
+                if (p.includes("CENTER MIDFIELDER") || p.includes("CM") || p.includes("MIDFIELDER")) return 5;
+                if (p.includes("CENTER FORWARD") || p.includes("CF") || p.includes("STRIKER") || p.includes("ST") || p.includes("FORWARD")) return 5;
+                
+                // Center-Right
+                if (p.includes("CENTER RIGHT DEFENDER") || p.includes("RCB") || p.includes("CENTER RIGHT BACK") || p.includes("RIGHT CENTER BACK")) return 7;
+                if (p.includes("CENTER RIGHT MIDFIELDER") || p.includes("RCM")) return 7;
+                
+                // Right side
+                if (p.includes("RIGHT BACK") || p.includes("RWB") || p.includes("RB") || p.includes("RIGHT WING BACK") || p.includes("RIGHT DEFENDER")) return 9;
+                if (p.includes("RIGHT MIDFIELDER") || p.includes("RM") || p.includes("RIGHT MID")) return 9;
+                if (p.includes("RIGHT FORWARD") || p.includes("RW") || p.includes("RF") || p.includes("RIGHT WINGER")) return 9;
+                
+                return 5;
+              };
+
               const calcFormation = (def || mid || fwd) ? `${def}-${mid}-${fwd}` : "4-3-3";
               
               return {
                 formation: calcFormation,
                 startingXI: starting
-                  .sort((a: any, b: any) => getSortValue(a.position) - getSortValue(b.position))
+                  .sort((a: any, b: any) => {
+                    const sortA = getSortValue(a.position);
+                    const sortB = getSortValue(b.position);
+                    if (sortA !== sortB) return sortA - sortB;
+                    return getHorizontalWeight(a.position) - getHorizontalWeight(b.position);
+                  })
                   .map((x: any) => ({
-                    id: x.player_name,
-                    name: x.player_name,
+                    id: (x.player_name || "").trim(),
+                    name: (x.player_name || "").trim(),
                     number: x.jersey_number,
                     position: x.position,
                   })),
                 substitutes: teamLineups.filter((x: any) => !x.is_starting).map((x: any) => ({
-                  id: x.player_name,
-                  name: x.player_name,
+                  id: (x.player_name || "").trim(),
+                  name: (x.player_name || "").trim(),
                   number: x.jersey_number,
                   position: x.position,
                 })),
@@ -330,23 +366,6 @@ export default function MatchDetails() {
           {/* STATS TAB */}
           {activeSubTab === "stats" && (
             <div className="max-w-xl mx-auto space-y-6">
-              {/* Segmented Control */}
-              <div className="flex bg-[#131b2e] p-1 rounded-full border border-slate-800">
-                {(["ALL", "1ST", "2ND"] as const).map((period) => (
-                  <button
-                    key={period}
-                    onClick={() => setStatsPeriod(period)}
-                    className={`flex-1 text-center py-2 text-xs font-bold rounded-full transition-all duration-200 ${
-                      statsPeriod === period
-                        ? "bg-slate-200 text-[#0f172a]"
-                        : "text-slate-400 hover:text-white"
-                    }`}
-                  >
-                    {period}
-                  </button>
-                ))}
-              </div>
-
               {match.stats ? (
                 <div className="bg-[#131b2e] border border-slate-800 rounded-2xl p-6 space-y-6">
                   {/* Possession bar */}
@@ -356,16 +375,8 @@ export default function MatchDetails() {
                       <span>{match.awayTeam.name}</span>
                     </div>
                     {(() => {
-                      let homePoss = parseInt(String(match.stats!.possession.home).replace('%', '')) || 0;
-                      let awayPoss = parseInt(String(match.stats!.possession.away).replace('%', '')) || 0;
-                      
-                      if (statsPeriod === "1ST") {
-                        homePoss = Math.max(0, Math.round(homePoss * 0.95));
-                        awayPoss = 100 - homePoss;
-                      } else if (statsPeriod === "2ND") {
-                        homePoss = Math.min(100, Math.round(homePoss * 1.05));
-                        awayPoss = 100 - homePoss;
-                      }
+                      const homePoss = parseInt(String(match.stats!.possession.home).replace('%', '')) || 0;
+                      const awayPoss = parseInt(String(match.stats!.possession.away).replace('%', '')) || 0;
 
                       return (
                         <div className="space-y-2">
@@ -394,17 +405,8 @@ export default function MatchDetails() {
                       { label: "Red Cards", key: "redCards" },
                     ] as const
                   ).map((statRow) => {
-                    let homeVal = match.stats?.[statRow.key]?.home || 0;
-                    let awayVal = match.stats?.[statRow.key]?.away || 0;
-                    
-                    // Mock data derivation for 1st/2nd half tabs since we only have total stats
-                    if (statsPeriod === "1ST") {
-                      homeVal = Math.ceil(homeVal * 0.6);
-                      awayVal = Math.ceil(awayVal * 0.6);
-                    } else if (statsPeriod === "2ND") {
-                      homeVal = Math.floor(homeVal * 0.4);
-                      awayVal = Math.floor(awayVal * 0.4);
-                    }
+                    const homeVal = match.stats?.[statRow.key]?.home || 0;
+                    const awayVal = match.stats?.[statRow.key]?.away || 0;
 
                     const total = homeVal + awayVal || 1;
                     const homePercent = (homeVal / total) * 100;

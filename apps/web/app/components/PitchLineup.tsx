@@ -162,7 +162,7 @@ export default function PitchLineup({ match }: PitchLineupProps) {
           )}
         </div>
         <div className="mt-1 bg-[#131b2e]/80 px-1.5 py-0.5 rounded text-[9px] font-bold text-white text-center shadow whitespace-nowrap overflow-hidden text-ellipsis max-w-[60px]">
-          {player.name.split(" ").pop()}
+          {(player.name || "").trim().split(" ").pop()}
         </div>
       </div>
     );
