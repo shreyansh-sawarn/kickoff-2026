@@ -39,67 +39,82 @@ export default function MatchDetails() {
               const starting = teamLineups.filter((x: any) => x.is_starting);
               
               const isDef = (p: string) => p.includes('DEFENDER') || p.includes('BACK') || ['DF', 'DEF', 'LB', 'RB', 'CB', 'LWB', 'RWB'].includes(p);
-              const isMid = (p: string) => p.includes('MIDFIELDER') || ['MF', 'MID', 'CM', 'DM', 'AM', 'LM', 'RM'].includes(p);
+              const isDM = (p: string) => p.includes('DEFENSIVE MIDFIELDER') || ['DM', 'CDM'].includes(p);
+              const isAM = (p: string) => p.includes('ATTACKING MIDFIELDER') || ['AM', 'CAM', 'AMC', 'AML', 'AMR'].includes(p);
+              const isMid = (p: string) => p.includes('MIDFIELDER') || ['MF', 'MID', 'CM', 'LM', 'RM'].includes(p);
               const isFwd = (p: string) => p.includes('FORWARD') || p.includes('WING') || p.includes('STRIKER') || ['FW', 'FWD', 'CF', 'ST', 'LW', 'RW'].includes(p);
               
               let def = 0;
+              let dm = 0;
               let mid = 0;
+              let am = 0;
               let fwd = 0;
               
               starting.forEach((x: any) => {
                 if (!x.position || x.position.toUpperCase() === 'GOALKEEPER' || x.position.toUpperCase() === 'GK') return;
                 const primaryPos = x.position.split(',')[0].toUpperCase().trim();
                 if (isDef(primaryPos)) def++;
+                else if (isDM(primaryPos)) dm++;
+                else if (isAM(primaryPos)) am++;
                 else if (isMid(primaryPos)) mid++;
                 else if (isFwd(primaryPos)) fwd++;
               });
               
               const getSortValue = (pos: string) => {
-                if (!pos) return 4;
+                if (!pos) return 5;
                 const p = pos.split(',')[0].toUpperCase().trim();
                 if (p === 'GK' || p === 'GOALKEEPER') return 0;
                 if (isDef(p)) return 1;
-                if (isMid(p)) return 2;
-                if (isFwd(p)) return 3;
-                return 4;
+                if (isDM(p)) return 2;
+                if (isMid(p) && !isAM(p)) return 3;
+                if (isAM(p)) return 4;
+                if (isFwd(p)) return 5;
+                return 5;
               };
 
               const getHorizontalWeight = (pos: string) => {
                 if (!pos) return 5;
                 const p = pos.toUpperCase().trim();
                 
-                // Left side
-                if (p.includes("LEFT BACK") || p.includes("LWB") || p.includes("LB") || p.includes("LEFT WING BACK") || p.includes("LEFT DEFENDER")) return 1;
-                if (p.includes("LEFT MIDFIELDER") || p.includes("LM") || p.includes("LEFT MID")) return 1;
-                if (p.includes("LEFT FORWARD") || p.includes("LW") || p.includes("LF") || p.includes("LEFT WINGER")) return 1;
+                // Specific Center-Left / Center-Right first to prevent substring collision
+                if (p.includes("CENTER LEFT") || p.includes("LEFT CENTER") || p.includes("LCB") || p.includes("LCM")) return 3;
+                if (p.includes("CENTER RIGHT") || p.includes("RIGHT CENTER") || p.includes("RCB") || p.includes("RCM")) return 7;
+
+                // Left side positions
+                if (p.includes("LEFT") || p.includes("LWB") || p.includes("LB") || p.includes("LF") || p.includes("LW")) return 1;
                 
-                // Center-Left
-                if (p.includes("CENTER LEFT DEFENDER") || p.includes("LCB") || p.includes("CENTER LEFT BACK") || p.includes("LEFT CENTER BACK")) return 3;
-                if (p.includes("CENTER LEFT MIDFIELDER") || p.includes("LCM")) return 3;
+                // Right side positions
+                if (p.includes("RIGHT") || p.includes("RWB") || p.includes("RB") || p.includes("RF") || p.includes("RW")) return 9;
                 
-                // Center / Defensive / Attacking
+                // Center positions
                 if (p.includes("DEFENSIVE MIDFIELDER") || p.includes("DM")) return 4.5;
                 if (p.includes("ATTACKING MIDFIELDER") || p.includes("AM")) return 5.5;
-                if (p.includes("CENTER DEFENDER") || p.includes("CB") || p.includes("CENTER BACK") || p.includes("DEFENDER") || p.includes("SWEEPER")) return 5;
-                if (p.includes("CENTER MIDFIELDER") || p.includes("CM") || p.includes("MIDFIELDER")) return 5;
-                if (p.includes("CENTER FORWARD") || p.includes("CF") || p.includes("STRIKER") || p.includes("ST") || p.includes("FORWARD")) return 5;
-                
-                // Center-Right
-                if (p.includes("CENTER RIGHT DEFENDER") || p.includes("RCB") || p.includes("CENTER RIGHT BACK") || p.includes("RIGHT CENTER BACK")) return 7;
-                if (p.includes("CENTER RIGHT MIDFIELDER") || p.includes("RCM")) return 7;
-                
-                // Right side
-                if (p.includes("RIGHT BACK") || p.includes("RWB") || p.includes("RB") || p.includes("RIGHT WING BACK") || p.includes("RIGHT DEFENDER")) return 9;
-                if (p.includes("RIGHT MIDFIELDER") || p.includes("RM") || p.includes("RIGHT MID")) return 9;
-                if (p.includes("RIGHT FORWARD") || p.includes("RW") || p.includes("RF") || p.includes("RIGHT WINGER")) return 9;
                 
                 return 5;
               };
 
-              const calcFormation = (def || mid || fwd) ? `${def}-${mid}-${fwd}` : "4-3-3";
+              // Compute 3-part or 4-part formation string dynamically
+              const parts = [];
+              if (def > 0) parts.push(def);
+              if (dm > 0 || mid > 0) {
+                if (am > 0) {
+                  parts.push(dm + mid);
+                  parts.push(am);
+                } else {
+                  parts.push(dm + mid);
+                }
+              } else if (am > 0) {
+                parts.push(am);
+              }
+              if (fwd > 0) parts.push(fwd);
+              
+               const calcFormation = parts.length >= 3 ? parts.join("-") : "4-3-3";
+              const isHome = code === data.homeTeam.code;
+              const serverFormation = isHome ? data.home_formation : data.away_formation;
+              const finalFormation = serverFormation || calcFormation;
               
               return {
-                formation: calcFormation,
+                formation: finalFormation,
                 startingXI: starting
                   .sort((a: any, b: any) => {
                     const sortA = getSortValue(a.position);
