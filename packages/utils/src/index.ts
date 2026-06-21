@@ -105,7 +105,7 @@ export function getFlagCdnUrl(countryCode: string): string {
     NZL: "nz", CPV: "cv", CIV: "ci", HAI: "ht", ANG: "ao",
     BUL: "bg", ROU: "ro", HUN: "hu", ISR: "il", CUB: "cu",
     PRK: "kp", IRL: "ie", SRB: "rs", SVN: "si", SVK: "sk",
-    GRE: "gr", BIH: "ba"
+    GRE: "gr", BIH: "ba", COD: "cd", CUW: "cw"
   };
   const iso2 = map[c] || c.toLowerCase().substring(0, 2);
   return `https://flagcdn.com/w160/${iso2}.png`;

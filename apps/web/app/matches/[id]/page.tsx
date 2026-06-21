@@ -514,7 +514,7 @@ export default function MatchDetails() {
                               
                               {event.playerTwo && (
                                 <span className="text-[10px] text-slate-400 block mt-1">
-                                  {event.type === "substitution" ? `In: ${event.playerTwo}` : `Assist: ${event.playerTwo}`}
+                                  {event.type === "substitution" ? `Out: ${event.playerTwo}` : `Assist: ${event.playerTwo}`}
                                 </span>
                               )}
                               
