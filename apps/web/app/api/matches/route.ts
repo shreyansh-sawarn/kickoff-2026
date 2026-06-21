@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { getMatches } from "@wc26/api";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const headers = {
     "Content-Type": "application/json",
-    "Cache-Control": "public, s-maxage=60, stale-while-revalidate=30", // 1 minute Cache for match schedules
+    "Cache-Control": "no-store, max-age=0, must-revalidate", 
   };
 
   try {

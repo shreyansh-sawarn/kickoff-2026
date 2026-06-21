@@ -18,9 +18,11 @@ export default function MatchDetails() {
   const [activeSubTab, setActiveSubTab] = useState<"lineup" | "stats" | "events">("lineup");
 
   useEffect(() => {
-    async function loadMatch() {
+    async function loadMatch(silent = false) {
       try {
-        setLoading(true);
+        if (!silent) {
+          setLoading(true);
+        }
         const data = await getMatchById(matchId);
         if (data) {
           const lineupsData = await getMatchLineups(matchId);
@@ -182,11 +184,21 @@ export default function MatchDetails() {
       } catch (err) {
         console.error("Error loading match detail:", err);
       } finally {
-        setLoading(false);
+        if (!silent) {
+          setLoading(false);
+        }
       }
     }
+
     if (matchId) {
       loadMatch();
+
+      // Poll match details every 15 seconds in the background
+      const interval = setInterval(() => {
+        loadMatch(true);
+      }, 15000);
+
+      return () => clearInterval(interval);
     }
   }, [matchId]);
 
