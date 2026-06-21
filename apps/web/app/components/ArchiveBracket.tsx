@@ -218,100 +218,109 @@ export function ArchiveBracket({ knockout }: ArchiveBracketProps) {
           willChange: "transform",
         }}
       >
-        <div className="flex justify-between items-stretch py-6 px-4 space-x-12" style={{ width: `${WORLD_W}px` }}>
-          {columns.map((column, colIdx) => (
-            <div key={colIdx} className="flex-1 flex flex-col justify-around min-w-[280px]">
-              <div className="text-xs font-black uppercase tracking-widest text-slate-300 text-center mb-6 py-2 bg-slate-900/60 border border-slate-800/50 rounded-xl">
-                {column.title}
-              </div>
-              <div className="flex-1 flex flex-col justify-around space-y-6 py-4">
-                {column.matches.map((item, idx) => {
-                  const isHomeWinner     = item.winner === item.homeTeam;
-                  const isAwayWinner     = item.winner === item.awayTeam;
-                  const isFinalMatch     = colIdx === 3;
+        <div className="flex justify-between items-stretch py-6 px-4 space-x-12" style={{ width: `${WORLD_W}px`, height: `${WORLD_H}px` }}>
+          {columns.map((column, colIdx) => {
+            const N = column.matches.length;
+            return (
+              <div key={colIdx} className="flex-1 flex flex-col min-w-[280px]">
+                <div className="text-xs font-black uppercase tracking-widest text-slate-300 text-center mb-6 py-2 bg-slate-900/60 border border-slate-800/50 rounded-xl h-10 flex items-center justify-center shrink-0">
+                  {column.title}
+                </div>
+                <div className="relative flex flex-col" style={{ height: "600px" }}>
+                  {column.matches.map((item, idx) => {
+                    const isHomeWinner     = item.winner === item.homeTeam;
+                    const isAwayWinner     = item.winner === item.awayTeam;
+                    const isFinalMatch     = colIdx === 3;
 
-                  let cardBorderClass = "border-slate-800/80 hover:border-slate-700/80";
-                  let cardBgClass     = "bg-[#131b2e]";
-                  if (isFinalMatch) {
-                    cardBorderClass = "border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.15)] hover:border-amber-400";
-                    cardBgClass     = "bg-[#1c1917]/90";
-                  }
+                    let cardBorderClass = "border-slate-800/80 hover:border-slate-700/80";
+                    let cardBgClass     = "bg-[#131b2e]";
+                    if (isFinalMatch) {
+                      cardBorderClass = "border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.15)] hover:border-amber-400";
+                      cardBgClass     = "bg-[#1c1917]/90";
+                    }
 
-                  const lineHighlightClass = "bg-emerald-500/80";
-                  const lineHoverClass     = `group-hover:bg-emerald-400/90 ${lineHighlightClass} transition-colors duration-300`;
+                    const lineHighlightClass = "bg-emerald-500/80";
+                    const lineHoverClass     = `group-hover:bg-emerald-400/90 ${lineHighlightClass} transition-colors duration-300`;
 
-                  const cardInner = (
-                    <div className="flex-1 flex flex-col space-y-1.5 group relative">
-                      <div className="px-1 flex justify-between items-center text-[10px] text-slate-500 font-bold uppercase tracking-wider">
-                        <span className={isFinalMatch ? "text-amber-400 font-extrabold" : "text-emerald-400"}>
-                          Full Time
-                        </span>
-                      </div>
+                    const cardInner = (
+                      <div className="flex-1 flex flex-col space-y-1.5 group relative">
+                        <div className="px-1 flex justify-between items-center text-[10px] text-slate-500 font-bold uppercase tracking-wider">
+                          <span className={isFinalMatch ? "text-amber-400 font-extrabold" : "text-emerald-400"}>
+                            Full Time
+                          </span>
+                        </div>
 
-                      {/* Home team */}
-                      <div className={`flex justify-between items-center px-3.5 py-2.5 ${cardBgClass} border ${cardBorderClass} rounded-2xl shadow-sm transition-all duration-300`}>
-                        <div className="flex items-center space-x-2.5">
-                           <div className="w-6 h-4 relative overflow-hidden rounded-sm shadow-sm shrink-0">
-                            <img src={getFlagCdnUrl(item.homeCode)} alt="" className="w-full h-full object-cover" />
+                        {/* Home team */}
+                        <div className={`flex justify-between items-center px-3.5 py-2.5 ${cardBgClass} border ${cardBorderClass} rounded-2xl shadow-sm transition-all duration-300`}>
+                          <div className="flex items-center space-x-2.5">
+                             <div className="w-6 h-4 relative overflow-hidden rounded-sm shadow-sm shrink-0">
+                              <img src={getFlagCdnUrl(item.homeCode)} alt="" className="w-full h-full object-cover" />
+                            </div>
+                            <span className={`text-xs font-semibold ${isHomeWinner ? "text-slate-100 font-extrabold" : "text-slate-400"}`}>{item.homeTeam}</span>
                           </div>
-                          <span className={`text-xs font-semibold ${isHomeWinner ? "text-slate-100 font-extrabold" : "text-slate-400"}`}>{item.homeTeam}</span>
+                          <span className={`text-xs font-black ${isHomeWinner ? "text-emerald-400" : "text-slate-500"}`}>{item.homeScore}</span>
                         </div>
-                        <span className={`text-xs font-black ${isHomeWinner ? "text-emerald-400" : "text-slate-500"}`}>{item.homeScore}</span>
-                      </div>
 
-                      {/* Left-side connector lines */}
-                      {colIdx < 3 && (() => {
-                        let vH = 0;
-                        if (colIdx === 0) vH = 148;
-                        else if (colIdx === 1) vH = 296;
-                        return (
-                          <>
-                            <div className={`absolute right-[-16px] top-1/2 w-[16px] h-[2px] pointer-events-none ${colIdx === 2 ? "right-[-32px] w-[32px]" : ""} ${lineHoverClass}`} />
-                            {vH > 0 && <div style={{ height: `${vH}px`, top: idx % 2 === 0 ? "50%" : "auto", bottom: idx % 2 === 1 ? "50%" : "auto" }} className={`absolute right-[-16px] w-[2px] pointer-events-none ${lineHoverClass}`} />}
-                            {vH > 0 && idx % 2 === 0 && <div style={{ top: `calc(50% + ${vH}px)` }} className={`absolute right-[-32px] w-[16px] h-[2px] pointer-events-none ${lineHoverClass}`} />}
-                          </>
-                        );
-                      })()}
+                        {/* Left-side connector lines */}
+                        {colIdx < 3 && (() => {
+                          let vH = 0;
+                          const isEven = idx % 2 === 0;
+                          if (colIdx === 0) vH = 600 / 8; // 75px
+                          else if (colIdx === 1) vH = 600 / 4; // 150px
+                          const isSemifinal = colIdx === 2;
 
-                      {/* Right-side connector lines */}
-                      {colIdx > 3 && (() => {
-                        let vH = 0;
-                        if (colIdx === 6) vH = 148;
-                        else if (colIdx === 5) vH = 296;
-                        return (
-                          <>
-                            <div className={`absolute left-[-16px] top-1/2 w-[16px] h-[2px] pointer-events-none ${colIdx === 4 ? "left-[-32px] w-[32px]" : ""} ${lineHoverClass}`} />
-                            {vH > 0 && <div style={{ height: `${vH}px`, top: idx % 2 === 0 ? "50%" : "auto", bottom: idx % 2 === 1 ? "50%" : "auto" }} className={`absolute left-[-16px] w-[2px] pointer-events-none ${lineHoverClass}`} />}
-                            {vH > 0 && idx % 2 === 0 && <div style={{ top: `calc(50% + ${vH}px)` }} className={`absolute left-[-32px] w-[16px] h-[2px] pointer-events-none ${lineHoverClass}`} />}
-                          </>
-                        );
-                      })()}
+                          return (
+                            <>
+                              <div style={{ right: "-32px", width: isSemifinal ? "64px" : "32px" }} className={`absolute top-1/2 h-[2px] pointer-events-none ${lineHoverClass}`} />
+                              {vH > 0 && <div style={{ height: `${vH}px`, top: isEven ? "50%" : "auto", bottom: isEven ? "auto" : "50%", right: "-32px", width: "2px" }} className={`absolute pointer-events-none ${lineHoverClass}`} />}
+                              {vH > 0 && isEven && <div style={{ top: `calc(50% + ${vH}px)`, right: "-64px", width: "32px" }} className={`absolute h-[2px] pointer-events-none ${lineHoverClass}`} />}
+                            </>
+                          );
+                        })()}
 
-                      {/* Away team */}
-                      <div className={`flex justify-between items-center px-3.5 py-2.5 ${cardBgClass} border ${cardBorderClass} rounded-2xl shadow-sm transition-all duration-300`}>
-                        <div className="flex items-center space-x-2.5">
-                           <div className="w-6 h-4 relative overflow-hidden rounded-sm shadow-sm shrink-0">
-                            <img src={getFlagCdnUrl(item.awayCode)} alt="" className="w-full h-full object-cover" />
+                        {/* Right-side connector lines */}
+                        {colIdx > 3 && (() => {
+                          let vH = 0;
+                          const isEven = idx % 2 === 0;
+                          if (colIdx === 6) vH = 600 / 8; // 75px
+                          else if (colIdx === 5) vH = 600 / 4; // 150px
+                          const isSemifinal = colIdx === 4;
+
+                          return (
+                            <>
+                              <div style={{ left: "-32px", width: isSemifinal ? "64px" : "32px" }} className={`absolute top-1/2 h-[2px] pointer-events-none ${lineHoverClass}`} />
+                              {vH > 0 && <div style={{ height: `${vH}px`, top: isEven ? "50%" : "auto", bottom: isEven ? "auto" : "50%", left: "-32px", width: "2px" }} className={`absolute pointer-events-none ${lineHoverClass}`} />}
+                              {vH > 0 && isEven && <div style={{ top: `calc(50% + ${vH}px)`, left: "-64px", width: "32px" }} className={`absolute h-[2px] pointer-events-none ${lineHoverClass}`} />}
+                            </>
+                          );
+                        })()}
+
+                        {/* Away team */}
+                        <div className={`flex justify-between items-center px-3.5 py-2.5 ${cardBgClass} border ${cardBorderClass} rounded-2xl shadow-sm transition-all duration-300`}>
+                          <div className="flex items-center space-x-2.5">
+                             <div className="w-6 h-4 relative overflow-hidden rounded-sm shadow-sm shrink-0">
+                              <img src={getFlagCdnUrl(item.awayCode)} alt="" className="w-full h-full object-cover" />
+                            </div>
+                            <span className={`text-xs font-semibold ${isAwayWinner ? "text-slate-100 font-extrabold" : "text-slate-400"}`}>{item.awayTeam}</span>
                           </div>
-                          <span className={`text-xs font-semibold ${isAwayWinner ? "text-slate-100 font-extrabold" : "text-slate-400"}`}>{item.awayTeam}</span>
+                          <span className={`text-xs font-black ${isAwayWinner ? "text-emerald-450" : "text-slate-500"}`}>{item.awayScore}</span>
                         </div>
-                        <span className={`text-xs font-black ${isAwayWinner ? "text-emerald-450" : "text-slate-500"}`}>{item.awayScore}</span>
+
+                        {/* Match details (like Penalties status) */}
+                        {item.details && (
+                          <div className="mt-1 bg-slate-900/60 border border-slate-800/40 rounded-xl py-1 px-2 text-center text-[9px] font-bold text-slate-400">
+                            {item.details}
+                          </div>
+                        )}
                       </div>
+                    );
 
-                      {/* Match details (like Penalties status) */}
-                      {item.details && (
-                        <div className="mt-1 bg-slate-900/60 border border-slate-800/40 rounded-xl py-1 px-2 text-center text-[9px] font-bold text-slate-400">
-                          {item.details}
-                        </div>
-                      )}
-                    </div>
-                  );
-
-                  return <div key={idx} className="w-full px-2">{cardInner}</div>;
-                })}
+                    return <div key={idx} className="w-full px-2" style={{ height: `${600 / N}px`, display: 'flex', alignItems: 'center' }}>{cardInner}</div>;
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

@@ -448,7 +448,7 @@ export default function MatchDetails() {
                   <div className="absolute top-6 bottom-6 left-1/2 w-0.5 bg-slate-850 transform -translate-x-1/2 z-0 hidden sm:block"></div>
 
                   <div className="space-y-8 z-10 relative">
-                    {match.events.filter(e => e.type !== "assist").map((event) => {
+                    {match.events.filter(e => (e.type as string) !== "assist").map((event) => {
                       const isHome = event.teamId === match.homeTeam.id;
                       
                       return (
