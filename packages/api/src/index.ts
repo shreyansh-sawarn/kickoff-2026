@@ -201,7 +201,9 @@ export async function getMatches(): Promise<Match[]> {
         stadium: stadiumInfo.name,
         city: stadiumInfo.city,
         scorers: [],
-        events: matchEvents
+        events: matchEvents,
+        home_formation: m.home_formation || undefined,
+        away_formation: m.away_formation || undefined
       };
     });
   } catch (e) {
