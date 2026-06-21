@@ -242,7 +242,7 @@ export default function MatchDetailsScreen() {
           <View style={styles.tabContent}>
             {match.events && match.events.length > 0 ? (
               <View style={styles.eventsCard}>
-                {match.events.map((event) => {
+                {match.events.filter(e => e.type !== "assist").map((event) => {
                   const isHome = event.teamId === match.homeTeam.id;
                   
                   return (

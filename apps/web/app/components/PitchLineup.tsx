@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { Match, MatchEvent } from "@wc26/types";
 import { getFlagCdnUrl } from "@wc26/utils";
+import { teamProfiles } from "./teamProfilesData";
 
 interface PitchLineupProps {
   match: Match;
@@ -10,6 +11,46 @@ interface PitchLineupProps {
 
 export default function PitchLineup({ match }: PitchLineupProps) {
   const [selectedTeam, setSelectedTeam] = useState<"home" | "away">("home");
+
+  const renderBallSvg = (size: number = 12) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="rounded-full bg-white shrink-0">
+      <defs>
+        <clipPath id="ball-clip-pitch">
+          <circle cx="12" cy="12" r="11" />
+        </clipPath>
+      </defs>
+      <circle cx="12" cy="12" r="11" fill="#f8fafc" />
+      <g clipPath="url(#ball-clip-pitch)">
+        <path d="M -2 4 Q 10 12 2 22" fill="none" stroke="#ef4444" strokeWidth="4.5" />
+        <path d="M 26 4 Q 14 12 22 22" fill="none" stroke="#3b82f6" strokeWidth="4.5" />
+        <path d="M 4 24 Q 12 15 20 24" fill="none" stroke="#22c55e" strokeWidth="4.5" />
+        <path d="M 8 4 Q 12 10 16 4" fill="none" stroke="#94a3b8" strokeWidth="1" />
+        <path d="M 4 18 Q 12 14 20 18" fill="none" stroke="#94a3b8" strokeWidth="1" />
+        <path d="M 12 10 L 12 14" fill="none" stroke="#94a3b8" strokeWidth="1" />
+      </g>
+      <circle cx="12" cy="12" r="11" stroke="#64748b" strokeWidth="1.5" />
+    </svg>
+  );
+
+  const renderOwnGoalSvg = (size: number = 12) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="rounded-full bg-white shrink-0">
+      <defs>
+        <clipPath id="og-ball-clip-pitch">
+          <circle cx="12" cy="12" r="11" />
+        </clipPath>
+      </defs>
+      <circle cx="12" cy="12" r="11" fill="#fee2e2" />
+      <g clipPath="url(#og-ball-clip-pitch)">
+        <path d="M -2 4 Q 10 12 2 22" fill="none" stroke="#ef4444" strokeWidth="4.5" />
+        <path d="M 26 4 Q 14 12 22 22" fill="none" stroke="#dc2626" strokeWidth="4.5" />
+        <path d="M 4 24 Q 12 15 20 24" fill="none" stroke="#b91c1c" strokeWidth="4.5" />
+        <path d="M 8 4 Q 12 10 16 4" fill="none" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" />
+        <path d="M 4 18 Q 12 14 20 18" fill="none" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" />
+        <path d="M 12 10 L 12 14" fill="none" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" />
+      </g>
+      <circle cx="12" cy="12" r="11" stroke="#dc2626" strokeWidth="1.5" />
+    </svg>
+  );
 
   const homeLineup = match.lineups?.home;
   const awayLineup = match.lineups?.away;
@@ -63,6 +104,8 @@ export default function PitchLineup({ match }: PitchLineupProps) {
     const subIn = getSubInEvent(player.name);
     const redCard = getRedCardEvent(player.name);
     const yellowCards = getYellowCards(player.name);
+    const goalsCount = match.events?.filter(e => e.type === "goal" && e.playerOne === player.name).length || 0;
+    const ownGoalsCount = match.events?.filter(e => e.type === "own_goal" && e.playerOne === player.name).length || 0;
     
     return (
       <div key={player.id} className="flex flex-col items-center relative z-10 mx-1 my-1 flex-1">
@@ -84,10 +127,32 @@ export default function PitchLineup({ match }: PitchLineupProps) {
                <span className="text-emerald-500 text-[10px] leading-none">⬆</span>
             </div>
           )}
+          {/* Goal Badge */}
+          {goalsCount > 0 && (
+            <div className="absolute -top-1.5 -left-1.5 bg-[#131b2e] rounded-full border border-slate-750/80 p-0.5 flex items-center justify-center shadow-lg">
+              {renderBallSvg(10)}
+              {goalsCount > 1 && (
+                <span className="absolute -top-1 -right-1 bg-slate-950 text-white rounded-full text-[7px] w-3 h-3 flex items-center justify-center font-black border border-slate-800 leading-none">
+                  {goalsCount}
+                </span>
+              )}
+            </div>
+          )}
+          {/* Own Goal Badge */}
+          {ownGoalsCount > 0 && (
+            <div className="absolute -bottom-1 -right-1 bg-[#131b2e] rounded-full border border-slate-750/80 p-0.5 flex items-center justify-center shadow-lg">
+              {renderOwnGoalSvg(10)}
+              {ownGoalsCount > 1 && (
+                <span className="absolute -top-1 -right-1 bg-rose-950 text-white rounded-full text-[7px] w-3 h-3 flex items-center justify-center font-black border border-rose-800 leading-none">
+                  {ownGoalsCount}
+                </span>
+              )}
+            </div>
+          )}
           {/* Card Icons */}
-          {(redCard || yellowCards.length > 0) && (
+          {(redCard || (yellowCards.length > 0 && !redCard)) && (
             <div className="absolute -top-1 -right-1 flex space-x-0.5">
-              {yellowCards.map((_, i) => (
+              {!redCard && yellowCards.map((_, i) => (
                 <div key={`y-${i}`} className="w-2 h-3 bg-[#f5a623] rounded-[1px] shadow-sm border border-slate-800" />
               ))}
               {redCard && (
@@ -97,7 +162,7 @@ export default function PitchLineup({ match }: PitchLineupProps) {
           )}
         </div>
         <div className="mt-1 bg-[#131b2e]/80 px-1.5 py-0.5 rounded text-[9px] font-bold text-white text-center shadow whitespace-nowrap overflow-hidden text-ellipsis max-w-[60px]">
-          {player.name.split(" ").pop()}
+          {(player.name || "").trim().split(" ").pop()}
         </div>
       </div>
     );
@@ -196,9 +261,16 @@ export default function PitchLineup({ match }: PitchLineupProps) {
           </div>
           <div>
             <h4 className="font-extrabold text-white text-sm">
-              {selectedTeam === "home" ? "Head Coach (Home)" : "Head Coach (Away)"}
+              Manager
             </h4>
-            <span className="text-xs text-indigo-400 font-bold">Coach</span>
+            <span className="text-xs text-indigo-400 font-bold">
+              {(() => {
+                const teamId = selectedTeam === "home" ? match.homeTeam.id : match.awayTeam.id;
+                const normalizedId = teamId.toLowerCase() === "turkey" || teamId.toLowerCase() === "türkiye" ? "tur" : teamId.toLowerCase();
+                const profile = teamProfiles.find(p => p.team_id === normalizedId);
+                return profile?.coach || "TBD";
+              })()}
+            </span>
           </div>
         </div>
 
@@ -212,6 +284,8 @@ export default function PitchLineup({ match }: PitchLineupProps) {
               const subIn = getSubInEvent(player.name);
               const redCard = getRedCardEvent(player.name);
               const yellowCards = getYellowCards(player.name);
+              const goalsCount = match.events?.filter(e => e.type === "goal" && e.playerOne === player.name).length || 0;
+              const ownGoalsCount = match.events?.filter(e => e.type === "own_goal" && e.playerOne === player.name).length || 0;
               
               return (
                 <div key={player.id} className="flex justify-between items-center py-1 border-b border-slate-800/50 last:border-0">
@@ -222,9 +296,29 @@ export default function PitchLineup({ match }: PitchLineupProps) {
                     <div>
                       <div className="font-bold text-sm text-slate-200 flex items-center">
                         <span>{player.name}</span>
-                        {(redCard || yellowCards.length > 0) && (
+                        {goalsCount > 0 && (
+                          <div className="flex items-center space-x-1 ml-2 relative">
+                            {renderBallSvg(12)}
+                            {goalsCount > 1 && (
+                              <span className="bg-slate-950 text-white rounded-full text-[8px] px-1 font-black border border-slate-800/80 leading-none flex items-center justify-center h-4">
+                                {goalsCount}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                        {ownGoalsCount > 0 && (
+                          <div className="flex items-center space-x-1 ml-2 relative">
+                            {renderOwnGoalSvg(12)}
+                            {ownGoalsCount > 1 && (
+                              <span className="bg-rose-950 text-white rounded-full text-[8px] px-1 font-black border border-rose-800/80 leading-none flex items-center justify-center h-4">
+                                {ownGoalsCount}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                        {(redCard || (yellowCards.length > 0 && !redCard)) && (
                           <div className="flex space-x-0.5 ml-2">
-                            {yellowCards.map((_, i) => (
+                            {!redCard && yellowCards.map((_, i) => (
                               <div key={`ysub-${i}`} className="w-2 h-[10px] bg-[#f5a623] rounded-[1px] shadow-sm" />
                             ))}
                             {redCard && (

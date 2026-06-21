@@ -90,6 +90,10 @@ export function getCountryFlag(countryCode: string): string {
 
 export function getFlagCdnUrl(countryCode: string): string {
   const c = countryCode.toUpperCase();
+  if (c === "GDR") return "/flags/gdr.svg";
+  if (c === "URS") return "/flags/urs.svg";
+  if (c === "YUG") return "/flags/yug.svg";
+
   const map: Record<string, string> = {
     USA: "us", MEX: "mx", CAN: "ca", ARG: "ar", BRA: "br",
     COL: "co", URU: "uy", ECU: "ec", PAR: "py", CHI: "cl",
@@ -105,7 +109,9 @@ export function getFlagCdnUrl(countryCode: string): string {
     NZL: "nz", CPV: "cv", CIV: "ci", HAI: "ht", ANG: "ao",
     BUL: "bg", ROU: "ro", HUN: "hu", ISR: "il", CUB: "cu",
     PRK: "kp", IRL: "ie", SRB: "rs", SVN: "si", SVK: "sk",
-    GRE: "gr", BIH: "ba"
+    GRE: "gr", BIH: "ba", COD: "cd", CUW: "cw",
+    FRG: "de", GDR: "de", URS: "ru", YUG: "rs", TCH: "cz",
+    TOG: "tg", TRI: "tt", INA: "id", KUW: "kw", CHN: "cn"
   };
   const iso2 = map[c] || c.toLowerCase().substring(0, 2);
   return `https://flagcdn.com/w160/${iso2}.png`;

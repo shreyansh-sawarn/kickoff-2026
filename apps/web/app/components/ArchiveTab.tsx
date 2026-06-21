@@ -10,6 +10,7 @@ import {
 } from "./archiveData";
 import { ArchiveBracket } from "./ArchiveBracket";
 import { ArchiveGroupStandings } from "./ArchiveGroupStandings";
+import { ArchiveMatches } from "./ArchiveMatches";
 
 interface ArchiveTabProps {
   t: (key: string) => string;
@@ -17,18 +18,42 @@ interface ArchiveTabProps {
 
 export function ArchiveTab({ t }: ArchiveTabProps) {
   const [selectedYear, setSelectedYear] = useState<string>("2022");
-  const [archiveView, setArchiveView] = useState<"knockout" | "standings">("knockout");
+  const [archiveView, setArchiveView] = useState<"knockout" | "standings" | "matches">("knockout");
   const [loading, setLoading] = useState<boolean>(false);
-  const [fetchedData, setFetchedData] = useState<{ groups: any[]; knockout: any[] } | null>(null);
+  const [fetchedData, setFetchedData] = useState<{ groups: any[]; knockout: any[]; matches: any[] } | null>(null);
+
+  const scrollContainerRef = React.useRef<HTMLDivElement>(null);
+
+  const scrollLeft = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: -200, behavior: "smooth" });
+    }
+  };
+
+  const scrollRight = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: 200, behavior: "smooth" });
+    }
+  };
 
   const selectedData = historyDb[selectedYear] || historyDb["2022"];
 
   useEffect(() => {
     setLoading(true);
-    fetch(`https://raw.githubusercontent.com/openfootball/worldcup.json/master/${selectedYear}/worldcup.json`)
+    // Try fetching from local public assets folder first
+    fetch(`/archive/${selectedYear}.json`)
       .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch historical JSON");
+        if (!res.ok) throw new Error("Local archive file not found, falling back to GitHub");
         return res.json();
+      })
+      .catch((err) => {
+        console.warn(err.message);
+        // Fallback to GitHub endpoint if local file is missing
+        return fetch(`https://raw.githubusercontent.com/openfootball/worldcup.json/master/${selectedYear}/worldcup.json`)
+          .then((res) => {
+            if (!res.ok) throw new Error("Failed to fetch historical JSON from GitHub");
+            return res.json();
+          });
       })
       .then((json) => {
         const parsed = parseHistoricalData(json);
@@ -37,7 +62,7 @@ export function ArchiveTab({ t }: ArchiveTabProps) {
       })
       .catch((err) => {
         console.error("Failed to load historical data:", err);
-        // Fallback representation if offline
+        // Fallback representation if offline and all fetches fail
         const localGroups = getHistoricalGroups(
           selectedYear, 
           selectedData.championName, 
@@ -52,7 +77,7 @@ export function ArchiveTab({ t }: ArchiveTabProps) {
           selectedData.runnerUp, 
           selectedData.runnerUpCode
         );
-        setFetchedData({ groups: localGroups, knockout: localKnockout });
+        setFetchedData({ groups: localGroups, knockout: localKnockout, matches: [] });
         setLoading(false);
       });
   }, [selectedYear]);
@@ -60,7 +85,44 @@ export function ArchiveTab({ t }: ArchiveTabProps) {
   const activeData: HistoricalData = {
     ...selectedData,
     groups: fetchedData?.groups || [],
-    knockout: fetchedData?.knockout || []
+    knockout: fetchedData?.knockout || [],
+    matches: fetchedData?.matches || []
+  };
+
+  const handleTimelineStepClick = (stepId: string) => {
+    setArchiveView("matches");
+    setTimeout(() => {
+      const sections = Array.from(document.querySelectorAll('[id^="archive-section-"]'));
+      let targetElement: Element | undefined = undefined;
+
+      if (stepId === "group") {
+        targetElement = sections.find(
+          (el) =>
+            el.id.includes("group") ||
+            el.id.includes("firstround") ||
+            el.id.includes("preliminaryround")
+        );
+      } else if (stepId === "r16") {
+        targetElement = sections.find((el) => el.id.includes("roundof16"));
+      } else if (stepId === "qf") {
+        targetElement = sections.find((el) => el.id.includes("quarterfinals"));
+      } else if (stepId === "sf") {
+        targetElement = sections.find((el) => el.id.includes("semifinals"));
+      } else if (stepId === "3rd") {
+        targetElement = sections.find(
+          (el) =>
+            el.id.includes("thirdplace") ||
+            el.id.includes("matchforthirdplace") ||
+            el.id.includes("matchfor3rdplace")
+        );
+      } else if (stepId === "final") {
+        targetElement = sections.find((el) => el.id.includes("final") || el.id.includes("finalround"));
+      }
+
+      if (targetElement) {
+        targetElement.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }, 150);
   };
 
   return (
@@ -80,20 +142,45 @@ export function ArchiveTab({ t }: ArchiveTabProps) {
         </div>
 
         {/* Year Pills Row Carousel */}
-        <div className="flex items-center space-x-2 overflow-x-auto pb-4 mb-6 z-10 relative scrollbar-none">
-          {yearsList.map((yr) => (
-            <button
-              key={yr}
-              onClick={() => setSelectedYear(yr)}
-              className={`px-4 py-1.5 rounded-full text-xs font-black transition-all ${
-                activeData.year === yr
-                  ? "bg-white text-slate-950 shadow-lg"
-                  : "bg-slate-900 text-slate-450 hover:text-slate-200 hover:bg-slate-800 border border-slate-800"
-              }`}
-            >
-              {yr}
-            </button>
-          ))}
+        <div className="relative z-10 flex items-center mb-6">
+          <button 
+            onClick={scrollLeft}
+            className="mr-2 w-8 h-8 rounded-full bg-slate-900/90 hover:bg-slate-800 hover:text-white text-slate-400 flex items-center justify-center border border-slate-800 shrink-0 shadow-lg transition-all"
+            aria-label="Scroll left"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          
+          <div 
+            ref={scrollContainerRef}
+            className="flex-1 flex items-center space-x-2 overflow-x-auto pb-2 scrollbar-none scroll-smooth"
+          >
+            {yearsList.map((yr) => (
+              <button
+                key={yr}
+                onClick={() => setSelectedYear(yr)}
+                className={`px-4 py-1.5 rounded-full text-xs font-black transition-all shrink-0 ${
+                  activeData.year === yr
+                    ? "bg-white text-slate-950 shadow-lg"
+                    : "bg-slate-900 text-slate-455 hover:text-slate-200 hover:bg-slate-800 border border-slate-800"
+                }`}
+              >
+                {yr}
+              </button>
+            ))}
+          </div>
+
+          <button 
+            onClick={scrollRight}
+            className="ml-2 w-8 h-8 rounded-full bg-slate-900/90 hover:bg-slate-800 hover:text-white text-slate-400 flex items-center justify-center border border-slate-800 shrink-0 shadow-lg transition-all"
+            aria-label="Scroll right"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
         </div>
 
         {/* Stepper progress indicator matching Google Sports timeline */}
@@ -109,12 +196,18 @@ export function ArchiveTab({ t }: ArchiveTabProps) {
               { id: "3rd", label: "3rd", active: true },
               { id: "final", label: "Final", active: true },
             ].map((step, idx) => (
-              <div key={idx} className="flex flex-col items-center">
-                <div className={`w-3.5 h-3.5 rounded-full border-2 border-[#131b2e] flex items-center justify-center ${
-                  step.active ? "bg-white" : "bg-slate-900"
+              <button
+                key={idx}
+                onClick={() => handleTimelineStepClick(step.id)}
+                className="flex flex-col items-center group/step focus:outline-none transition-all"
+              >
+                <div className={`w-3.5 h-3.5 rounded-full border-2 border-[#131b2e] flex items-center justify-center transition-all ${
+                  step.active ? "bg-white group-hover/step:bg-emerald-400 group-hover/step:scale-125" : "bg-slate-900"
                 }`} />
-                <span className="mt-2 font-black tracking-widest bg-[#131b2e] px-1 rounded">{step.label}</span>
-              </div>
+                <span className="mt-2 font-black tracking-widest bg-[#131b2e] px-1 rounded transition-all text-slate-400 group-hover/step:text-white text-[8px] sm:text-[9px]">
+                  {step.label}
+                </span>
+              </button>
             ))}
           </div>
         </div>
@@ -195,6 +288,16 @@ export function ArchiveTab({ t }: ArchiveTabProps) {
           >
             Group Standings
           </button>
+          <button
+            onClick={() => setArchiveView("matches")}
+            className={`pb-3 px-6 text-sm font-bold border-b-2 transition-all ${
+              archiveView === "matches"
+                ? "border-emerald-400 text-emerald-400 font-extrabold"
+                : "border-transparent text-slate-455 hover:text-slate-200"
+            }`}
+          >
+            Matches
+          </button>
         </div>
 
         {loading || !fetchedData ? (
@@ -205,8 +308,10 @@ export function ArchiveTab({ t }: ArchiveTabProps) {
           </div>
         ) : archiveView === "knockout" ? (
           <ArchiveBracket knockout={activeData.knockout} />
-        ) : (
+        ) : archiveView === "standings" ? (
           <ArchiveGroupStandings groups={activeData.groups} />
+        ) : (
+          <ArchiveMatches matches={activeData.matches} />
         )}
       </div>
     </div>

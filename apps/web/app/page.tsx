@@ -109,6 +109,7 @@ export default function Web() {
                 liveMatches={liveMatches}
                 upcomingMatches={upcomingMatches}
                 standings={standings}
+                players={players}
                 favorites={favorites}
                 t={t}
                 router={router}

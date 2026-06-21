@@ -336,7 +336,7 @@ export function TeamsTab({
                     👔
                   </div>
                   <div>
-                    <span className="text-[10px] text-slate-500 font-black uppercase tracking-wider block">Manager / Head Coach</span>
+                    <span className="text-[10px] text-slate-500 font-black uppercase tracking-wider block">Manager</span>
                     <span className="font-black text-sm text-slate-100">{coachName}</span>
                   </div>
                 </div>
@@ -380,7 +380,9 @@ export function TeamsTab({
                           </div>
 
                           <div className="pt-1.5 border-t border-slate-800/30 flex justify-between items-center text-[10px]">
-                            <span className="text-slate-500 font-bold">Match Result</span>
+                            <span className="text-slate-500 font-bold">
+                              {isUpcoming ? "Match Start" : "Match Result"}
+                            </span>
                             {isUpcoming ? (
                               <span className="font-black text-slate-300">{formatMatchTime(match.datetime)}</span>
                             ) : (

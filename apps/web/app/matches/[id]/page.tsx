@@ -16,7 +16,6 @@ export default function MatchDetails() {
   const [match, setMatch] = useState<Match | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeSubTab, setActiveSubTab] = useState<"lineup" | "stats" | "events">("lineup");
-  const [statsPeriod, setStatsPeriod] = useState<"ALL" | "1ST" | "2ND">("ALL");
 
   useEffect(() => {
     async function loadMatch() {
@@ -63,21 +62,58 @@ export default function MatchDetails() {
                 return 4;
               };
 
+              const getHorizontalWeight = (pos: string) => {
+                if (!pos) return 5;
+                const p = pos.toUpperCase().trim();
+                
+                // Left side
+                if (p.includes("LEFT BACK") || p.includes("LWB") || p.includes("LB") || p.includes("LEFT WING BACK") || p.includes("LEFT DEFENDER")) return 1;
+                if (p.includes("LEFT MIDFIELDER") || p.includes("LM") || p.includes("LEFT MID")) return 1;
+                if (p.includes("LEFT FORWARD") || p.includes("LW") || p.includes("LF") || p.includes("LEFT WINGER")) return 1;
+                
+                // Center-Left
+                if (p.includes("CENTER LEFT DEFENDER") || p.includes("LCB") || p.includes("CENTER LEFT BACK") || p.includes("LEFT CENTER BACK")) return 3;
+                if (p.includes("CENTER LEFT MIDFIELDER") || p.includes("LCM")) return 3;
+                
+                // Center / Defensive / Attacking
+                if (p.includes("DEFENSIVE MIDFIELDER") || p.includes("DM")) return 4.5;
+                if (p.includes("ATTACKING MIDFIELDER") || p.includes("AM")) return 5.5;
+                if (p.includes("CENTER DEFENDER") || p.includes("CB") || p.includes("CENTER BACK") || p.includes("DEFENDER") || p.includes("SWEEPER")) return 5;
+                if (p.includes("CENTER MIDFIELDER") || p.includes("CM") || p.includes("MIDFIELDER")) return 5;
+                if (p.includes("CENTER FORWARD") || p.includes("CF") || p.includes("STRIKER") || p.includes("ST") || p.includes("FORWARD")) return 5;
+                
+                // Center-Right
+                if (p.includes("CENTER RIGHT DEFENDER") || p.includes("RCB") || p.includes("CENTER RIGHT BACK") || p.includes("RIGHT CENTER BACK")) return 7;
+                if (p.includes("CENTER RIGHT MIDFIELDER") || p.includes("RCM")) return 7;
+                
+                // Right side
+                if (p.includes("RIGHT BACK") || p.includes("RWB") || p.includes("RB") || p.includes("RIGHT WING BACK") || p.includes("RIGHT DEFENDER")) return 9;
+                if (p.includes("RIGHT MIDFIELDER") || p.includes("RM") || p.includes("RIGHT MID")) return 9;
+                if (p.includes("RIGHT FORWARD") || p.includes("RW") || p.includes("RF") || p.includes("RIGHT WINGER")) return 9;
+                
+                return 5;
+              };
+
               const calcFormation = (def || mid || fwd) ? `${def}-${mid}-${fwd}` : "4-3-3";
               
               return {
                 formation: calcFormation,
                 startingXI: starting
-                  .sort((a: any, b: any) => getSortValue(a.position) - getSortValue(b.position))
+                  .sort((a: any, b: any) => {
+                    const sortA = getSortValue(a.position);
+                    const sortB = getSortValue(b.position);
+                    if (sortA !== sortB) return sortA - sortB;
+                    return getHorizontalWeight(a.position) - getHorizontalWeight(b.position);
+                  })
                   .map((x: any) => ({
-                    id: x.player_name,
-                    name: x.player_name,
+                    id: (x.player_name || "").trim(),
+                    name: (x.player_name || "").trim(),
                     number: x.jersey_number,
                     position: x.position,
                   })),
                 substitutes: teamLineups.filter((x: any) => !x.is_starting).map((x: any) => ({
-                  id: x.player_name,
-                  name: x.player_name,
+                  id: (x.player_name || "").trim(),
+                  name: (x.player_name || "").trim(),
                   number: x.jersey_number,
                   position: x.position,
                 })),
@@ -105,6 +141,40 @@ export default function MatchDetails() {
               yellowCards: { home: homeStat.yellow_cards || homeStat.yellowCards || 0, away: awayStat.yellow_cards || awayStat.yellowCards || 0 },
               redCards: { home: homeStat.red_cards || homeStat.redCards || 0, away: awayStat.red_cards || awayStat.redCards || 0 },
             };
+          }
+
+          // Identify own goals dynamically
+          if (data.lineups && data.events) {
+            const homePlayers = new Set(
+              [
+                ...(data.lineups.home?.startingXI || []),
+                ...(data.lineups.home?.substitutes || []),
+              ].map((p: any) => p.name.trim().toLowerCase())
+            );
+            const awayPlayers = new Set(
+              [
+                ...(data.lineups.away?.startingXI || []),
+                ...(data.lineups.away?.substitutes || []),
+              ].map((p: any) => p.name.trim().toLowerCase())
+            );
+
+            data.events = data.events.map((event: any) => {
+              if (event.type === "goal") {
+                const pName = (event.playerOne || "").trim().toLowerCase();
+                const isHomeEvent = event.teamId.toLowerCase() === data.homeTeam.code.toLowerCase();
+                const isAwayEvent = event.teamId.toLowerCase() === data.awayTeam.code.toLowerCase();
+
+                // If it's a home goal event, but the player is in the away lineup: own goal
+                if (isHomeEvent && awayPlayers.has(pName)) {
+                  return { ...event, type: "own_goal" };
+                }
+                // If it's an away goal event, but the player is in the home lineup: own goal
+                if (isAwayEvent && homePlayers.has(pName)) {
+                  return { ...event, type: "own_goal" };
+                }
+              }
+              return event;
+            });
           }
 
           setMatch(data);
@@ -186,7 +256,7 @@ export default function MatchDetails() {
           
           <div className="flex items-center space-x-2 text-xs font-bold text-slate-400 uppercase tracking-widest mb-6">
             <MapPin className="w-3.5 h-3.5 mr-1" />
-            <span>{match.stadium}, {match.city}</span>
+            <span>{match.stadium}</span>
           </div>
 
           <div className="flex items-center justify-between w-full max-w-2xl my-4">
@@ -296,23 +366,6 @@ export default function MatchDetails() {
           {/* STATS TAB */}
           {activeSubTab === "stats" && (
             <div className="max-w-xl mx-auto space-y-6">
-              {/* Segmented Control */}
-              <div className="flex bg-[#131b2e] p-1 rounded-full border border-slate-800">
-                {(["ALL", "1ST", "2ND"] as const).map((period) => (
-                  <button
-                    key={period}
-                    onClick={() => setStatsPeriod(period)}
-                    className={`flex-1 text-center py-2 text-xs font-bold rounded-full transition-all duration-200 ${
-                      statsPeriod === period
-                        ? "bg-slate-200 text-[#0f172a]"
-                        : "text-slate-400 hover:text-white"
-                    }`}
-                  >
-                    {period}
-                  </button>
-                ))}
-              </div>
-
               {match.stats ? (
                 <div className="bg-[#131b2e] border border-slate-800 rounded-2xl p-6 space-y-6">
                   {/* Possession bar */}
@@ -322,16 +375,8 @@ export default function MatchDetails() {
                       <span>{match.awayTeam.name}</span>
                     </div>
                     {(() => {
-                      let homePoss = parseInt(String(match.stats!.possession.home).replace('%', '')) || 0;
-                      let awayPoss = parseInt(String(match.stats!.possession.away).replace('%', '')) || 0;
-                      
-                      if (statsPeriod === "1ST") {
-                        homePoss = Math.min(100, Math.round(homePoss * 1.05));
-                        awayPoss = 100 - homePoss;
-                      } else if (statsPeriod === "2ND") {
-                        homePoss = Math.max(0, Math.round(homePoss * 0.95));
-                        awayPoss = 100 - homePoss;
-                      }
+                      const homePoss = parseInt(String(match.stats!.possession.home).replace('%', '')) || 0;
+                      const awayPoss = parseInt(String(match.stats!.possession.away).replace('%', '')) || 0;
 
                       return (
                         <div className="space-y-2">
@@ -360,17 +405,8 @@ export default function MatchDetails() {
                       { label: "Red Cards", key: "redCards" },
                     ] as const
                   ).map((statRow) => {
-                    let homeVal = match.stats?.[statRow.key]?.home || 0;
-                    let awayVal = match.stats?.[statRow.key]?.away || 0;
-                    
-                    // Mock data derivation for 1st/2nd half tabs since we only have total stats
-                    if (statsPeriod === "1ST") {
-                      homeVal = Math.floor(homeVal * 0.4);
-                      awayVal = Math.floor(awayVal * 0.4);
-                    } else if (statsPeriod === "2ND") {
-                      homeVal = Math.ceil(homeVal * 0.6);
-                      awayVal = Math.ceil(awayVal * 0.6);
-                    }
+                    const homeVal = match.stats?.[statRow.key]?.home || 0;
+                    const awayVal = match.stats?.[statRow.key]?.away || 0;
 
                     const total = homeVal + awayVal || 1;
                     const homePercent = (homeVal / total) * 100;
@@ -414,26 +450,26 @@ export default function MatchDetails() {
                   <div className="absolute top-6 bottom-6 left-1/2 w-0.5 bg-slate-850 transform -translate-x-1/2 z-0 hidden sm:block"></div>
 
                   <div className="space-y-8 z-10 relative">
-                    {match.events.map((event) => {
+                    {match.events.filter(e => (e.type as string) !== "assist").map((event) => {
                       const isHome = event.teamId === match.homeTeam.id;
                       
                       return (
                         <div 
                           key={event.id}
                           className={`flex flex-col sm:flex-row items-center justify-between ${
-                            isHome ? "sm:flex-row-reverse" : ""
+                            isHome ? "" : "sm:flex-row-reverse"
                           }`}
                         >
                           {/* Event Text Side */}
                           <div className={`w-full sm:w-[45%] flex ${
-                            isHome ? "justify-start sm:text-left" : "justify-end text-right"
+                            isHome ? "justify-end text-right" : "justify-start sm:text-left"
                           } mb-2 sm:mb-0`}>
                             <div className="bg-slate-900/60 border border-slate-800/80 p-3.5 rounded-xl max-w-xs shadow-md">
                               <div className="flex items-center space-x-2">
                                 <span className="font-extrabold text-sm text-white">
                                   {event.playerOne}
                                 </span>
-                                {event.type === "goal" && (
+                                 {event.type === "goal" && (
                                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="ml-1.5 shrink-0 shadow-sm rounded-full bg-white">
                                     <defs>
                                       <clipPath id="ball-clip">
@@ -452,6 +488,25 @@ export default function MatchDetails() {
                                     <circle cx="12" cy="12" r="11" stroke="#64748b" strokeWidth="1.5" />
                                   </svg>
                                 )}
+                                {event.type === "own_goal" && (
+                                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="ml-1.5 shrink-0 shadow-sm rounded-full bg-white">
+                                     <defs>
+                                       <clipPath id="og-ball-clip-page">
+                                         <circle cx="12" cy="12" r="11" />
+                                       </clipPath>
+                                     </defs>
+                                     <circle cx="12" cy="12" r="11" fill="#fee2e2" />
+                                     <g clipPath="url(#og-ball-clip-page)">
+                                       <path d="M -2 4 Q 10 12 2 22" fill="none" stroke="#ef4444" strokeWidth="4.5" />
+                                       <path d="M 26 4 Q 14 12 22 22" fill="none" stroke="#dc2626" strokeWidth="4.5" />
+                                       <path d="M 4 24 Q 12 15 20 24" fill="none" stroke="#b91c1c" strokeWidth="4.5" />
+                                       <path d="M 8 4 Q 12 10 16 4" fill="none" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" />
+                                       <path d="M 4 18 Q 12 14 20 18" fill="none" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" />
+                                       <path d="M 12 10 L 12 14" fill="none" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" />
+                                     </g>
+                                     <circle cx="12" cy="12" r="11" stroke="#dc2626" strokeWidth="1.5" />
+                                   </svg>
+                                )}
                                 {event.type === "card_yellow" && <div className="w-2.5 h-[14px] bg-[#f5a623] rounded-[2px] ml-2 shrink-0 shadow-sm" />}
                                 {event.type === "card_red" && <div className="w-2.5 h-[14px] bg-[#e53e3e] rounded-[2px] ml-2 shrink-0 shadow-sm" />}
                                 {event.type === "substitution" && <span className="text-xs text-emerald-450 ml-1.5 shrink-0">🔄</span>}
@@ -459,13 +514,19 @@ export default function MatchDetails() {
                               
                               {event.playerTwo && (
                                 <span className="text-[10px] text-slate-400 block mt-1">
-                                  {event.type === "substitution" ? `In: ${event.playerTwo}` : `Assist: ${event.playerTwo}`}
+                                  {event.type === "substitution" ? `Out: ${event.playerTwo}` : `Assist: ${event.playerTwo}`}
                                 </span>
                               )}
                               
                               {event.isPenalty && (
                                 <span className="text-[10px] text-slate-400 block mt-1">
                                   Penalty Goal
+                                </span>
+                              )}
+
+                              {event.type === "own_goal" && (
+                                <span className="text-[10px] text-slate-400 block mt-1">
+                                  Own Goal
                                 </span>
                               )}
                               

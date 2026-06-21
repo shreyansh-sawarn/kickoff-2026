@@ -100,9 +100,15 @@ export async function getMatches(): Promise<Match[]> {
       const stadiumInfo = Object.values(stadiumNames).find(s => s.name === m.venue) || { name: m.venue || "Unknown Stadium", city: "Unknown City" };
 
       const status = m.status === "finished" ? "completed" : (m.status === "scheduled" ? "upcoming" : m.status);
+      const matchDatetime = m.kickoff_utc.endsWith('Z') ? m.kickoff_utc : `${m.kickoff_utc.replace(' ', 'T')}Z`;
 
-      const matchEvents = (m.events || []).map((e: any) => {
+      const rawEvents = (m.events || []).map((e: any) => {
         let type = e.type;
+        let isPenalty = false;
+        if (type === "penalty") {
+          type = "goal";
+          isPenalty = true;
+        }
         if (type === "yellow") type = "card_yellow";
         if (type === "red" || type === "second_yellow") type = "card_red";
         if (type === "sub_in" || type === "sub_out" || type === "sub") type = "substitution";
@@ -126,11 +132,37 @@ export async function getMatches(): Promise<Match[]> {
           playerOne: e.player_name || "Unknown Player",
           playerTwo: extraData.playerTwo || undefined,
           score: extraData.score || undefined,
-          isPenalty: extraData.isPenalty || false,
+          isPenalty: isPenalty || extraData.isPenalty || false,
           isShootoutPenalty: extraData.isShootoutPenalty || false,
           clockDisplay: extraData.clockDisplay || undefined
         };
-      }).sort((a: any, b: any) => a.minute - b.minute);
+      });
+
+      const assists = rawEvents.filter((e: any) => e.type === "assist");
+      const nonAssists = rawEvents.filter((e: any) => e.type !== "assist");
+
+      assists.forEach((assist: any) => {
+        const matchingGoal = nonAssists.find((goal: any) => 
+          goal.type === "goal" && 
+          goal.minute === assist.minute && 
+          goal.teamId === assist.teamId &&
+          !goal.playerTwo
+        );
+        if (matchingGoal) {
+          matchingGoal.playerTwo = assist.playerOne;
+        } else {
+          const anyGoal = nonAssists.find((goal: any) => 
+            goal.type === "goal" && 
+            goal.minute === assist.minute && 
+            goal.teamId === assist.teamId
+          );
+          if (anyGoal) {
+            anyGoal.playerTwo = assist.playerOne;
+          }
+        }
+      });
+
+      const matchEvents = nonAssists.sort((a: any, b: any) => a.minute - b.minute);
 
       let homePenaltyScore = matchEvents.filter((e: any) => e.isShootoutPenalty && e.teamId === m.home_team_code?.toLowerCase()).length;
       let awayPenaltyScore = matchEvents.filter((e: any) => e.isShootoutPenalty && e.teamId === m.away_team_code?.toLowerCase()).length;
@@ -147,7 +179,6 @@ export async function getMatches(): Promise<Match[]> {
         else mappedGroup = "r32";
       }
 
-      const matchDatetime = m.kickoff_utc.endsWith('Z') ? m.kickoff_utc : `${m.kickoff_utc.replace(' ', 'T')}Z`;
       let minute = undefined;
       if (status === "live") {
         const diffMs = Date.now() - new Date(matchDatetime).getTime();

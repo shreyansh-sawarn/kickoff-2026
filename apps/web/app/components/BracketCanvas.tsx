@@ -14,6 +14,7 @@ export function BracketCanvas({ router, matches = [] }: BracketCanvasProps) {
 
   const [zoom, setZoom]           = useState(0.4);
   const [isDragging, setIsDragging]     = useState(false);
+  const [hoveredTeam, setHoveredTeam]   = useState<string | null>(null);
 
   const viewportRef = useRef<HTMLDivElement>(null);
   const dragOrigin = useRef({ x: 0, y: 0, scrollLeft: 0, scrollTop: 0 });
@@ -194,7 +195,19 @@ export function BracketCanvas({ router, matches = [] }: BracketCanvasProps) {
         away: awayName,
         awayFlag: m.awayTeam.flag || "🏳️",
         score: m.homeScore !== undefined && m.homeScore !== null && m.awayScore !== undefined && m.awayScore !== null ? `${m.homeScore} - ${m.awayScore}` : null,
-        winner: m.homeScore !== undefined && m.homeScore !== null && m.awayScore !== undefined && m.awayScore !== null ? (m.homeScore > m.awayScore ? homeName : (m.awayScore > m.homeScore ? awayName : undefined)) : undefined,
+        homePenaltyScore: m.homePenaltyScore,
+        awayPenaltyScore: m.awayPenaltyScore,
+        winner: (() => {
+          if (m.homeScore === undefined || m.homeScore === null || m.awayScore === undefined || m.awayScore === null) return undefined;
+          if (m.homeScore > m.awayScore) return homeName;
+          if (m.awayScore > m.homeScore) return awayName;
+          // Tied after extra time — check penalty shootout
+          if (m.homePenaltyScore !== undefined && m.awayPenaltyScore !== undefined) {
+            if (m.homePenaltyScore > m.awayPenaltyScore) return homeName;
+            if (m.awayPenaltyScore > m.homePenaltyScore) return awayName;
+          }
+          return undefined;
+        })(),
         isFinal: m.group === "final",
         isThirdPlace: m.group === "3rd"
       };
@@ -250,8 +263,8 @@ export function BracketCanvas({ router, matches = [] }: BracketCanvasProps) {
       title: "Finals",
       key: "finals-center",
       matches: [
-        { ...finalMatches[0], label: "Championship Match", isFinal: true },
-        { ...finalMatches[1], label: "Third Place Play-off", isThirdPlace: true }
+        { ...finalMatches[0], label: "Championship Match", isFinal: true, isThirdPlace: false },
+        { ...finalMatches[1], label: "Third Place Play-off", isThirdPlace: true, isFinal: false }
       ]
     },
     {
@@ -276,6 +289,39 @@ export function BracketCanvas({ router, matches = [] }: BracketCanvasProps) {
     }
   ];
 
+  // ── Team path tracing for hover highlighting ──────────────────────
+  const teamPath = (() => {
+    if (!hoveredTeam) return null;
+    const pathMap = new Map<string, 'won' | 'lost' | 'upcoming'>();
+    columns.forEach((column, colIdx) => {
+      column.matches.forEach((match: any, matchIdx: number) => {
+        const isInMatch = match.home === hoveredTeam || match.away === hoveredTeam;
+        if (!isInMatch) return;
+        if (match.winner === hoveredTeam) {
+          pathMap.set(`${colIdx}-${matchIdx}`, 'won');
+        } else if (match.winner && match.winner !== hoveredTeam) {
+          pathMap.set(`${colIdx}-${matchIdx}`, 'lost');
+        } else {
+          pathMap.set(`${colIdx}-${matchIdx}`, 'upcoming');
+        }
+      });
+    });
+    return pathMap;
+  })();
+
+  // Does the hovered team win this match (outgoing connector should glow)?
+  const isConnectorInPath = (colIdx: number, matchIdx: number) => {
+    if (!teamPath) return false;
+    return teamPath.get(`${colIdx}-${matchIdx}`) === 'won';
+  };
+
+  // Does the hovered team progress through this pair's far connector?
+  const isFarConnectorInPath = (colIdx: number, evenIdx: number) => {
+    if (!teamPath) return false;
+    return teamPath.get(`${colIdx}-${evenIdx}`) === 'won' ||
+           teamPath.get(`${colIdx}-${evenIdx + 1}`) === 'won';
+  };
+
   const bracketWorld = (
     <div
       style={{
@@ -295,160 +341,235 @@ export function BracketCanvas({ router, matches = [] }: BracketCanvasProps) {
           willChange: "transform",
         }}
       >
-        <div className="flex justify-between items-stretch py-6 px-4 space-x-12" style={{ width: `${WORLD_W}px` }}>
-          {columns.map((column, colIdx) => (
-            <div key={colIdx} className="flex-1 flex flex-col justify-around min-w-[280px]">
-              <div className="text-xs font-black uppercase tracking-widest text-slate-300 text-center mb-6 py-2 bg-slate-900/60 border border-slate-800/50 rounded-xl">
-                {column.title}
-              </div>
-              <div className="flex-1 flex flex-col justify-around space-y-6 py-4">
-                {column.matches.map((item, idx) => {
-                  const isHomeWinner     = item.winner === item.home;
-                  const isAwayWinner     = item.winner === item.away;
-                  const isFinalMatch     = "isFinal"      in item && item.isFinal;
-                  const isThirdPlaceMatch = "isThirdPlace" in item && item.isThirdPlace;
+        <div className="flex justify-between items-stretch py-6 px-4 space-x-12" style={{ width: `${WORLD_W}px`, height: `${WORLD_H}px` }}>
+          {columns.map((column, colIdx) => {
+            const N = column.matches.length;
+            return (
+              <div key={colIdx} className="flex-1 flex flex-col min-w-[280px]">
+                <div className="text-xs font-black uppercase tracking-widest text-slate-300 text-center mb-6 py-2 bg-slate-900/60 border border-slate-800/50 rounded-xl h-10 flex items-center justify-center shrink-0">
+                  {column.title}
+                </div>
+                <div className="relative flex flex-col" style={{ height: "1120px" }}>
+                  {column.matches.map((item, idx) => {
+                    const isHomeWinner     = item.winner === item.home;
+                    const isAwayWinner     = item.winner === item.away;
+                    const isFinalMatch     = "isFinal"      in item && item.isFinal;
+                    const isThirdPlaceMatch = "isThirdPlace" in item && item.isThirdPlace;
 
-                  let cardBorderClass = "border-slate-800/80 hover:border-slate-700/80";
-                  let cardBgClass     = "bg-[#131b2e]";
-                  if (isFinalMatch) {
-                    cardBorderClass = "border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.15)] hover:border-amber-400";
-                    cardBgClass     = "bg-[#1c1917]/90";
-                  } else if (isThirdPlaceMatch) {
-                    cardBorderClass = "border-cyan-800/50 hover:border-cyan-700";
-                    cardBgClass     = "bg-[#0f172a]/90";
-                  }
+                    let cardBorderClass = "border-slate-800/80 hover:border-slate-700/80";
+                    let cardBgClass     = "bg-[#131b2e]";
+                    if (isFinalMatch) {
+                      cardBorderClass = "border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.15)] hover:border-amber-400";
+                      cardBgClass     = "bg-[#1c1917]/90";
+                    } else if (isThirdPlaceMatch) {
+                      cardBorderClass = "border-cyan-800/50 hover:border-cyan-700";
+                      cardBgClass     = "bg-[#0f172a]/90";
+                    }
 
-                  let matchLabel = "";
-                  if      (colIdx === 0) matchLabel = `M${73 + idx}`;
-                  else if (colIdx === 1) matchLabel = `M${89 + idx}`;
-                  else if (colIdx === 2) matchLabel = `M${97 + idx}`;
-                  else if (colIdx === 3) matchLabel = "M101";
-                  else if (colIdx === 4) matchLabel = isFinalMatch ? "M104" : "M103";
-                  else if (colIdx === 5) matchLabel = "M102";
-                  else if (colIdx === 6) matchLabel = `M${99 + idx}`;
-                  else if (colIdx === 7) matchLabel = `M${93 + idx}`;
-                  else if (colIdx === 8) matchLabel = `M${81 + idx}`;
+                    let matchLabel = "";
+                    if      (colIdx === 0) matchLabel = `M${73 + idx}`;
+                    else if (colIdx === 1) matchLabel = `M${89 + idx}`;
+                    else if (colIdx === 2) matchLabel = `M${97 + idx}`;
+                    else if (colIdx === 3) matchLabel = "M101";
+                    else if (colIdx === 4) matchLabel = idx === 0 ? "M104" : "M103";
+                    else if (colIdx === 5) matchLabel = "M102";
+                    else if (colIdx === 6) matchLabel = `M${99 + idx}`;
+                    else if (colIdx === 7) matchLabel = `M${93 + idx}`;
+                    else if (colIdx === 8) matchLabel = `M${81 + idx}`;
 
-                  const matchStatus        = item.score ? "Full time" : "Upcoming";
-                  const hasWinner          = !!item.winner;
-                  const lineHighlightClass = hasWinner ? "bg-emerald-500/80" : "bg-slate-700/60";
-                  const lineHoverClass     = `group-hover:bg-emerald-400/90 ${lineHighlightClass} transition-colors duration-300`;
+                    const matchStatus        = item.score ? "Full time" : "Upcoming";
+                    const hasWinner          = !!item.winner;
+                    const lineHighlightClass = hasWinner ? "bg-emerald-500/80" : "bg-slate-700/60";
+                    const lineHoverClass     = `group-hover:bg-emerald-400/90 ${lineHighlightClass} transition-colors duration-300`;
 
-                  const cardInner = (
-                    <div
-                      onClick={() => item.matchId && router.push(`/matches/${item.matchId}`)}
-                      className="flex-1 flex flex-col space-y-1.5 cursor-pointer group relative"
-                    >
-                      <div className="px-1 flex justify-between items-center text-[10px] text-slate-500 font-bold uppercase tracking-wider">
-                        <span className={isFinalMatch ? "text-amber-400 font-extrabold" : isThirdPlaceMatch ? "text-cyan-400 font-extrabold" : "text-emerald-400"}>
-                          {matchStatus}
-                        </span>
-                        <span>{item.date} • {item.time}</span>
-                      </div>
+                    // Calculate connector line vertical height for this column
+                    const getVH = () => {
+                      if (colIdx === 3 || colIdx === 5) return 1120 / 4;
+                      return 1120 / (N * 2);
+                    };
+                    const vH = getVH();
+                    const isEven = idx % 2 === 0;
 
-                      {/* Home team */}
-                      <div className={`flex justify-between items-center px-3.5 py-2.5 ${cardBgClass} border ${cardBorderClass} rounded-2xl shadow-sm transition-all duration-300`}>
-                        <div className="flex items-center space-x-2.5">
-                          <span className="w-5 h-5 rounded bg-slate-900 border border-slate-800/80 flex items-center justify-center text-[9px] font-black text-slate-400">{item.homeSeed || ""}</span>
-                          <div className="w-6 h-4 relative overflow-hidden rounded-sm shadow-sm shrink-0 flex items-center justify-center text-xs">
-                            {item.homeFlag && item.homeFlag !== "🏳️" ? (
-                              <img src={getFlagCdnUrl(item.home)} onError={(e) => { e.currentTarget.style.display = 'none' }} alt="" className="w-full h-full object-cover" />
-                            ) : (
-                              <span className="opacity-50">🏳️</span>
-                            )}
-                          </div>
-                          <span className={`font-bold uppercase tracking-widest text-[13px] ${isHomeWinner ? "text-white" : "text-slate-300"}`}>
-                            {item.home}
+                    // Offset to align connectors/labels with the visual center of the
+                    // match card (midpoint between the two team rows) instead of the
+                    // geometric center which includes the status header.
+                    const connectorOffset = 10;
+
+                    // ── Path highlighting logic ──────────────────────
+                    const matchKey = `${colIdx}-${idx}`;
+                    const pathStatus = teamPath?.get(matchKey);
+                    const isInPath = !!pathStatus;
+                    const isPathWon = pathStatus === 'won';
+                    const isPathLost = pathStatus === 'lost';
+                    const isDimmed = !!hoveredTeam && !isInPath;
+
+                    // Override card styling for path highlighting
+                    if (isPathWon) {
+                      cardBorderClass = "border-emerald-500/70 shadow-[0_0_20px_rgba(16,185,129,0.3)]";
+                      cardBgClass = "bg-[#0d1f1a]";
+                    } else if (isPathLost) {
+                      cardBorderClass = "border-red-500/60 shadow-[0_0_20px_rgba(239,68,68,0.3)]";
+                      cardBgClass = "bg-[#1f0f0f]";
+                    }
+
+                    // Connector class for outgoing horizontal + vertical from this match
+                    const pathGlow = "bg-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.5)]";
+                    const pathDim  = "bg-slate-800/20";
+                    const myConnectorClass = isConnectorInPath(colIdx, idx)
+                      ? pathGlow
+                      : (hoveredTeam ? pathDim : lineHoverClass);
+                    // Far horizontal connector (even matches, connects pair → next round)
+                    const farConnectorClass = (isEven && isFarConnectorInPath(colIdx, idx))
+                      ? pathGlow
+                      : (hoveredTeam ? pathDim : lineHoverClass);
+                    // SF connector class (all three parts are one path segment)
+                    const sfConnectorClass = isConnectorInPath(colIdx, idx)
+                      ? pathGlow
+                      : (hoveredTeam ? pathDim : lineHoverClass);
+
+                    const cardInner = (
+                      <div
+                        onClick={() => item.matchId && router.push(`/matches/${item.matchId}`)}
+                        className="flex-1 flex flex-col cursor-pointer group"
+                      >
+                        <div className="px-1 flex justify-between items-center text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1.5">
+                          <span className={isFinalMatch ? "text-amber-400 font-extrabold" : isThirdPlaceMatch ? "text-cyan-400 font-extrabold" : "text-emerald-400"}>
+                            {matchStatus}
                           </span>
+                          <span>{item.date} • {item.time}</span>
                         </div>
-                        {item.score && (
-                          <div className={`text-[13px] font-black ${isHomeWinner ? "text-emerald-400" : "text-slate-500"}`}>
-                            {item.score.split(" - ")[0]}
+
+                        {/* Home team */}
+                        <div className={`flex justify-between items-center px-3.5 py-2.5 ${cardBgClass} border ${cardBorderClass} rounded-2xl shadow-sm transition-all duration-300`}>
+                          <div className="flex items-center space-x-2.5">
+                            <span className="w-5 h-5 rounded bg-slate-900 border border-slate-800/80 flex items-center justify-center text-[9px] font-black text-slate-400">{item.homeSeed || ""}</span>
+                            <div className="w-6 h-4 relative overflow-hidden rounded-sm shadow-sm shrink-0 flex items-center justify-center text-xs">
+                              {item.homeFlag && item.homeFlag !== "🏳️" ? (
+                                <img src={getFlagCdnUrl(item.home)} onError={(e) => { e.currentTarget.style.display = 'none' }} alt="" className="w-full h-full object-cover" />
+                              ) : (
+                                <span className="opacity-50">🏳️</span>
+                              )}
+                            </div>
+                            <span
+                              className={`font-bold uppercase tracking-widest text-[13px] ${isHomeWinner ? "text-white" : "text-slate-300"} ${item.home !== "TBD" ? "cursor-pointer hover:text-emerald-400 transition-colors duration-200" : ""}`}
+                              onMouseEnter={() => item.home !== "TBD" && setHoveredTeam(item.home)}
+                              onMouseLeave={() => setHoveredTeam(null)}
+                            >
+                              {item.home}
+                            </span>
+                          </div>
+                          {item.score && (
+                            <div className={`text-[13px] font-black ${isHomeWinner ? "text-emerald-400" : "text-slate-500"}`}>
+                              {item.score.split(" - ")[0]}
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="h-1.5" />
+
+                        {/* Away team */}
+                        <div className={`flex justify-between items-center px-3.5 py-2.5 ${cardBgClass} border ${cardBorderClass} rounded-2xl shadow-sm transition-all duration-300`}>
+                          <div className="flex items-center space-x-2.5">
+                            <span className="w-5 h-5 rounded bg-slate-900 border border-slate-800/80 flex items-center justify-center text-[9px] font-black text-slate-400">{item.awaySeed || ""}</span>
+                            <div className="w-6 h-4 relative overflow-hidden rounded-sm shadow-sm shrink-0 flex items-center justify-center text-xs">
+                              {item.awayFlag && item.awayFlag !== "🏳️" ? (
+                                <img src={getFlagCdnUrl(item.away)} onError={(e) => { e.currentTarget.style.display = 'none' }} alt="" className="w-full h-full object-cover" />
+                              ) : (
+                                <span className="opacity-50">🏳️</span>
+                              )}
+                            </div>
+                            <span
+                              className={`font-bold uppercase tracking-widest text-[13px] ${isAwayWinner ? "text-white" : "text-slate-300"} ${item.away !== "TBD" ? "cursor-pointer hover:text-emerald-400 transition-colors duration-200" : ""}`}
+                              onMouseEnter={() => item.away !== "TBD" && setHoveredTeam(item.away)}
+                              onMouseLeave={() => setHoveredTeam(null)}
+                            >
+                              {item.away}
+                            </span>
+                          </div>
+                          {item.score && (
+                            <div className={`text-[13px] font-black ${isAwayWinner ? "text-emerald-400" : "text-slate-500"}`}>
+                              {item.score.split(" - ")[1]}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Penalty badge */}
+                        {item.homePenaltyScore !== undefined && item.awayPenaltyScore !== undefined && (
+                          <div className="mt-1 flex justify-center">
+                            <span className="text-[9px] font-black text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-lg px-2.5 py-0.5 tracking-widest uppercase">
+                              Pen {item.homePenaltyScore}:{item.awayPenaltyScore}
+                            </span>
                           </div>
                         )}
-                      </div>
 
-                      {/* Left-side connector lines */}
-                      {colIdx < 4 && (() => {
-                        let vH = 0;
-                        if (colIdx === 0 || colIdx === 8) vH = 84;
-                        else if (colIdx === 1 || colIdx === 7) vH = 176;
-                        else if (colIdx === 2 || colIdx === 6) vH = 356;
-                        return (
-                          <>
-                            <div className={`absolute right-[-16px] top-1/2 w-[16px] h-[2px] pointer-events-none ${colIdx === 3 ? "right-[-32px] w-[32px]" : ""} ${lineHoverClass}`} />
-                            {vH > 0 && <div style={{ height: `${vH}px`, top: idx % 2 === 0 ? "50%" : "auto", bottom: idx % 2 === 1 ? "50%" : "auto" }} className={`absolute right-[-16px] w-[2px] pointer-events-none ${lineHoverClass}`} />}
-                            {vH > 0 && idx % 2 === 0 && <div style={{ top: `calc(50% + ${vH}px)` }} className={`absolute right-[-32px] w-[16px] h-[2px] pointer-events-none ${lineHoverClass}`} />}
-                          </>
-                        );
-                      })()}
-
-                      {/* Right-side connector lines */}
-                      {colIdx > 4 && (() => {
-                        let vH = 0;
-                        if (colIdx === 0 || colIdx === 8) vH = 84;
-                        else if (colIdx === 1 || colIdx === 7) vH = 176;
-                        else if (colIdx === 2 || colIdx === 6) vH = 356;
-                        return (
-                          <>
-                            <div className={`absolute left-[-16px] top-1/2 w-[16px] h-[2px] pointer-events-none ${colIdx === 5 ? "left-[-32px] w-[32px]" : ""} ${lineHoverClass}`} />
-                            {vH > 0 && <div style={{ height: `${vH}px`, top: idx % 2 === 0 ? "50%" : "auto", bottom: idx % 2 === 1 ? "50%" : "auto" }} className={`absolute left-[-16px] w-[2px] pointer-events-none ${lineHoverClass}`} />}
-                            {vH > 0 && idx % 2 === 0 && <div style={{ top: `calc(50% + ${vH}px)` }} className={`absolute left-[-32px] w-[16px] h-[2px] pointer-events-none ${lineHoverClass}`} />}
-                          </>
-                        );
-                      })()}
-
-                      {/* Away team */}
-                      <div className={`flex justify-between items-center px-3.5 py-2.5 ${cardBgClass} border ${cardBorderClass} rounded-2xl shadow-sm transition-all duration-300`}>
-                        <div className="flex items-center space-x-2.5">
-                          <span className="w-5 h-5 rounded bg-slate-900 border border-slate-800/80 flex items-center justify-center text-[9px] font-black text-slate-400">{item.awaySeed || ""}</span>
-                          <div className="w-6 h-4 relative overflow-hidden rounded-sm shadow-sm shrink-0 flex items-center justify-center text-xs">
-                            {item.awayFlag && item.awayFlag !== "🏳️" ? (
-                              <img src={getFlagCdnUrl(item.away)} onError={(e) => { e.currentTarget.style.display = 'none' }} alt="" className="w-full h-full object-cover" />
-                            ) : (
-                              <span className="opacity-50">🏳️</span>
-                            )}
-                          </div>
-                          <span className={`font-bold uppercase tracking-widest text-[13px] ${isAwayWinner ? "text-white" : "text-slate-300"}`}>
-                            {item.away}
-                          </span>
-                        </div>
-                        {item.score && (
-                          <div className={`text-[13px] font-black ${isAwayWinner ? "text-emerald-400" : "text-slate-500"}`}>
-                            {item.score.split(" - ")[1]}
+                        {/* Champion banner */}
+                        {isFinalMatch && item.winner && (
+                          <div className="mt-1.5 bg-amber-500/10 border border-amber-500/20 rounded-xl py-1.5 px-2 text-center text-[10px] font-bold text-amber-400">
+                            🎉 Congratulations {item.winner === "BRA" ? "Brazil" : item.winner}!
                           </div>
                         )}
+
+                        {/* Center column match ID */}
+                        {colIdx === 4 && <div className="pt-1 text-center"><span className="text-[9px] font-black text-rose-500 tracking-wider">{matchLabel}</span></div>}
                       </div>
+                    );
 
-                      {/* Champion banner */}
-                      {isFinalMatch && item.winner && (
-                        <div className="mt-1 bg-amber-500/10 border border-amber-500/20 rounded-xl py-1.5 px-2 text-center text-[10px] font-bold text-amber-400">
-                          🎉 Congratulations {item.winner === "BRA" ? "Brazil" : item.winner}!
+                    if (colIdx < 4) return (
+                      // Row slot: full fixed height, position:relative so absolute children reference it
+                      <div key={idx} className={`relative w-full transition-opacity duration-300 ${isDimmed ? "opacity-25" : "opacity-100"}`} style={{ height: `${1120 / N}px`, flexShrink: 0 }}>
+                        {/* Card content centered inside the row slot */}
+                        <div style={{ position: "absolute", top: 0, bottom: 0, left: "40px", right: 0, display: "flex", alignItems: "center" }}>
+                          {cardInner}
                         </div>
-                      )}
-
-                      {/* Center column match ID */}
-                      {colIdx === 4 && <div className="pt-1 text-center"><span className="text-[9px] font-black text-rose-500 tracking-wider">{matchLabel}</span></div>}
-                    </div>
-                  );
-
-                  if (colIdx < 4) return (
-                    <div key={idx} className="flex items-center space-x-2 w-full">
-                      <span className="text-[10px] font-black text-rose-500 w-8 text-right tracking-wider select-none">{matchLabel}</span>
-                      {cardInner}
-                    </div>
-                  );
-                  if (colIdx > 4) return (
-                    <div key={idx} className="flex items-center space-x-2 w-full">
-                      {cardInner}
-                      <span className="text-[10px] font-black text-rose-500 w-8 text-left tracking-wider select-none">{matchLabel}</span>
-                    </div>
-                  );
-                  return <div key={idx} className="w-full px-2">{cardInner}</div>;
-                })}
+                        {/* Match label — pinned to row slot's true vertical center */}
+                        <span className="text-[10px] font-black text-rose-500 w-8 text-right tracking-wider select-none" style={{ position: "absolute", left: 0, top: `calc(50% + ${connectorOffset}px)`, transform: "translateY(-50%)" }}>{matchLabel}</span>
+                        {/* Left-side connector lines — children of row slot */}
+                        {colIdx === 3 ? (
+                          <>
+                            <div style={{ right: "-24px", width: "24px", top: `calc(50% + ${connectorOffset}px)` }} className={`absolute h-[2px] pointer-events-none transition-all duration-300 ${sfConnectorClass}`} />
+                            <div style={{ height: `${vH}px`, bottom: `calc(50% - ${connectorOffset}px)`, right: "-24px", width: "2px" }} className={`absolute pointer-events-none transition-all duration-300 ${sfConnectorClass}`} />
+                            <div style={{ top: `calc(50% + ${connectorOffset}px - ${vH}px)`, right: "-56px", width: "32px" }} className={`absolute h-[2px] pointer-events-none transition-all duration-300 ${sfConnectorClass}`} />
+                          </>
+                        ) : (
+                          <>
+                            <div style={{ right: "-44px", width: "44px", top: `calc(50% + ${connectorOffset}px)` }} className={`absolute h-[2px] pointer-events-none transition-all duration-300 ${myConnectorClass}`} />
+                            <div style={{ height: `${vH}px`, top: isEven ? `calc(50% + ${connectorOffset}px)` : "auto", bottom: isEven ? "auto" : `calc(50% - ${connectorOffset}px)`, right: "-44px", width: "2px" }} className={`absolute pointer-events-none transition-all duration-300 ${myConnectorClass}`} />
+                            {isEven && <div style={{ top: `calc(50% + ${connectorOffset}px + ${vH}px)`, right: "-88px", width: "44px" }} className={`absolute h-[2px] pointer-events-none transition-all duration-300 ${farConnectorClass}`} />}
+                          </>
+                        )}
+                      </div>
+                    );
+                    if (colIdx > 4) return (
+                      // Row slot: full fixed height, position:relative so absolute children reference it
+                      <div key={idx} className={`relative w-full transition-opacity duration-300 ${isDimmed ? "opacity-25" : "opacity-100"}`} style={{ height: `${1120 / N}px`, flexShrink: 0 }}>
+                        {/* Card content centered inside the row slot */}
+                        <div style={{ position: "absolute", top: 0, bottom: 0, left: 0, right: "40px", display: "flex", alignItems: "center" }}>
+                          {cardInner}
+                        </div>
+                        {/* Match label — pinned to row slot's true vertical center */}
+                        <span className="text-[10px] font-black text-rose-500 w-8 text-left tracking-wider select-none" style={{ position: "absolute", right: 0, top: `calc(50% + ${connectorOffset}px)`, transform: "translateY(-50%)" }}>{matchLabel}</span>
+                        {/* Right-side connector lines — children of row slot */}
+                        {colIdx === 5 ? (
+                          <>
+                            <div style={{ left: "-24px", width: "24px", top: `calc(50% + ${connectorOffset}px)` }} className={`absolute h-[2px] pointer-events-none transition-all duration-300 ${sfConnectorClass}`} />
+                            <div style={{ height: `${vH}px`, bottom: `calc(50% - ${connectorOffset}px)`, left: "-24px", width: "2px" }} className={`absolute pointer-events-none transition-all duration-300 ${sfConnectorClass}`} />
+                            <div style={{ top: `calc(50% + ${connectorOffset}px - ${vH}px)`, left: "-56px", width: "32px" }} className={`absolute h-[2px] pointer-events-none transition-all duration-300 ${sfConnectorClass}`} />
+                          </>
+                        ) : (
+                          <>
+                            <div style={{ left: "-44px", width: "44px", top: `calc(50% + ${connectorOffset}px)` }} className={`absolute h-[2px] pointer-events-none transition-all duration-300 ${myConnectorClass}`} />
+                            <div style={{ height: `${vH}px`, top: isEven ? `calc(50% + ${connectorOffset}px)` : "auto", bottom: isEven ? "auto" : `calc(50% - ${connectorOffset}px)`, left: "-44px", width: "2px" }} className={`absolute pointer-events-none transition-all duration-300 ${myConnectorClass}`} />
+                            {isEven && <div style={{ top: `calc(50% + ${connectorOffset}px + ${vH}px)`, left: "-88px", width: "44px" }} className={`absolute h-[2px] pointer-events-none transition-all duration-300 ${farConnectorClass}`} />}
+                          </>
+                        )}
+                      </div>
+                    );
+                    return <div key={idx} className={`w-full px-2 transition-opacity duration-300 ${isDimmed ? "opacity-25" : "opacity-100"}`} style={{ height: `${1120 / N}px`, flexShrink: 0, display: "flex", alignItems: "center" }}>{cardInner}</div>;
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

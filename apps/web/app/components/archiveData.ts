@@ -20,6 +20,24 @@ export interface KnockoutMatch {
   details?: string;
 }
 
+export interface HistoricalMatch {
+  num: number;
+  date: string;
+  time?: string;
+  homeTeam: string;
+  homeCode: string;
+  homeScore: string;
+  awayTeam: string;
+  awayCode: string;
+  awayScore: string;
+  details?: string;
+  group?: string | null;
+  round?: string | null;
+  stadium?: string;
+  goals1?: { name: string; minute: number; offset?: number; penalty?: boolean; owngoal?: boolean }[];
+  goals2?: { name: string; minute: number; offset?: number; penalty?: boolean; owngoal?: boolean }[];
+}
+
 export interface HistoricalData {
   year: string;
   host: string;
@@ -32,7 +50,9 @@ export interface HistoricalData {
   topScorerGoals: number;
   groups: { name: string; standings: GroupStanding[] }[];
   knockout: { roundName: string; matches: KnockoutMatch[] }[];
+  matches: HistoricalMatch[];
 }
+
 
 export const nameToCode: Record<string, string> = {
   "Argentina": "ARG", "Brazil": "BRA", "France": "FRA", "Germany": "GER",
@@ -426,8 +446,43 @@ export function parseHistoricalData(data: any) {
     "Final": []
   };
 
+  const parsedMatches: HistoricalMatch[] = [];
   const matches = data.matches || [];
-  matches.forEach((m: any) => {
+  
+  matches.forEach((m: any, idx: number) => {
+    let details = "";
+    if (m.score && m.score.et) {
+      details += `(AET: ${m.score.et[0]}-${m.score.et[1]})`;
+    }
+    if (m.score && m.score.p) {
+      details += ` (Pen: ${m.score.p[0]}-${m.score.p[1]})`;
+    }
+
+    let homeScore = m.score && m.score.ft ? String(m.score.ft[0]) : "0";
+    let awayScore = m.score && m.score.ft ? String(m.score.ft[1]) : "0";
+    if (m.score && m.score.et) {
+      homeScore = String(m.score.et[0]);
+      awayScore = String(m.score.et[1]);
+    }
+
+    parsedMatches.push({
+      num: idx + 1,
+      date: m.date,
+      time: m.time,
+      homeTeam: m.team1,
+      homeCode: getTeamCode(m.team1),
+      homeScore,
+      awayTeam: m.team2,
+      awayCode: getTeamCode(m.team2),
+      awayScore,
+      details: details.trim() || undefined,
+      group: m.group || null,
+      round: m.round || null,
+      stadium: m.ground,
+      goals1: m.goals1,
+      goals2: m.goals2
+    });
+
     if (m.group) {
       const gName = m.group;
       if (!groupMap[gName]) {
@@ -465,41 +520,45 @@ export function parseHistoricalData(data: any) {
     } else {
       const targetRound = normalizeRound(m.round);
       if (targetRound) {
-        let details = m.round;
+        let koDetails = m.round;
         if (m.score && m.score.et) {
-          details += ` (AET: ${m.score.et[0]}-${m.score.et[1]})`;
+          koDetails += ` (AET: ${m.score.et[0]}-${m.score.et[1]})`;
         }
         if (m.score && m.score.p) {
-          details += ` (Pen: ${m.score.p[0]}-${m.score.p[1]})`;
+          koDetails += ` (Pen: ${m.score.p[0]}-${m.score.p[1]})`;
         }
 
-        let homeScore = m.score && m.score.ft ? String(m.score.ft[0]) : "0";
-        let awayScore = m.score && m.score.ft ? String(m.score.ft[1]) : "0";
+        let koHomeScore = m.score && m.score.ft ? String(m.score.ft[0]) : "0";
+        let koAwayScore = m.score && m.score.ft ? String(m.score.ft[1]) : "0";
         if (m.score && m.score.et) {
-          homeScore = String(m.score.et[0]);
-          awayScore = String(m.score.et[1]);
+          koHomeScore = String(m.score.et[0]);
+          koAwayScore = String(m.score.et[1]);
         }
 
         let winner = undefined;
-        if (m.score && m.score.ft) {
-          const s1 = m.score.ft[0];
-          const s2 = m.score.ft[1];
-          if (s1 > s2) winner = m.team1;
-          else if (s2 > s1) winner = m.team2;
-          else if (m.score.p) {
-            winner = m.score.p[0] > m.score.p[1] ? m.team1 : m.team2;
-          }
+        let s1 = m.score && m.score.ft ? m.score.ft[0] : 0;
+        let s2 = m.score && m.score.ft ? m.score.ft[1] : 0;
+        if (m.score && m.score.et) {
+          s1 = m.score.et[0];
+          s2 = m.score.et[1];
+        }
+        if (s1 > s2) {
+          winner = m.team1;
+        } else if (s2 > s1) {
+          winner = m.team2;
+        } else if (m.score && m.score.p) {
+          winner = m.score.p[0] > m.score.p[1] ? m.team1 : m.team2;
         }
 
         knockoutRounds[targetRound].push({
           homeTeam: m.team1,
           homeCode: getTeamCode(m.team1),
-          homeScore,
+          homeScore: koHomeScore,
           awayTeam: m.team2,
           awayCode: getTeamCode(m.team2),
-          awayScore,
+          awayScore: koAwayScore,
           winner,
-          details
+          details: koDetails
         });
       }
     }
@@ -541,10 +600,10 @@ export function parseHistoricalData(data: any) {
     { roundName: "Final", matches: [...knockoutRounds["Final"], ...knockoutRounds["Third place"]] }
   ];
 
-  return { groups, knockout };
+  return { groups, knockout, matches: parsedMatches };
 }
 
-export const historyDb: Record<string, Omit<HistoricalData, "groups" | "knockout">> = {
+export const historyDb: Record<string, Omit<HistoricalData, "groups" | "knockout" | "matches">> = {
   "2022": {
     year: "2022",
     host: "Qatar",
