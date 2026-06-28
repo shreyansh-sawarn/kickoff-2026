@@ -169,7 +169,7 @@ export async function getMatches(): Promise<Match[]> {
       
 
       let mappedGroup = m.group_name;
-      if (m.stage === "knockout") {
+      if (m.stage === "knockout" || ["r32", "r16", "qf", "sf", "final"].includes(m.stage)) {
         const idStr = m.id.toLowerCase();
         if (idStr.includes("match_104") || idStr.includes("final") || (idStr.includes("winner_match_101"))) mappedGroup = "final";
         else if (idStr.includes("match_103") || idStr.includes("third") || idStr.includes("loser_match_101")) mappedGroup = "3rd";
