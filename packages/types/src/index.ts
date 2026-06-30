@@ -37,7 +37,7 @@ export interface MatchScorer {
 
 export interface MatchEvent {
   id: string;
-  type: 'goal' | 'card_yellow' | 'card_red' | 'substitution' | 'own_goal';
+  type: 'goal' | 'card_yellow' | 'card_red' | 'substitution' | 'own_goal' | 'shootout_penalty';
   minute: number;
   teamId: string;
   playerOne: string; // Scorer, carded player, player off
@@ -46,6 +46,9 @@ export interface MatchEvent {
   score?: string; // Match score at the time of the event
   isPenalty?: boolean; // Whether the event is a penalty
   clockDisplay?: string; // E.g. "45+2"
+  isShootoutPenalty?: boolean;
+  didScore?: boolean;
+  shotNumber?: number;
 }
 
 export interface MatchStats {

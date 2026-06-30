@@ -55,6 +55,21 @@ const getKnockoutTag = (match: Match): string | null => {
   return null;
 };
 
+const formatGroupOrRound = (group: string): string => {
+  if (!group) return "";
+  const g = group.toLowerCase().trim();
+  if (g === "r32") return "R32";
+  if (g === "r16") return "R16";
+  if (g === "qf") return "QF";
+  if (g === "sf") return "SF";
+  if (g === "3rd") return "3rd Place";
+  if (g === "final") return "Final";
+  if (g.startsWith("group")) {
+    return group.charAt(0).toUpperCase() + group.slice(1);
+  }
+  return group;
+};
+
 interface MatchesTabProps {
   matches: Match[];
   liveMatches: Match[];
@@ -68,28 +83,6 @@ export default function MatchesTab({
   t,
   router
 }: MatchesTabProps) {
-  const [groupBy, setGroupBy] = useState<"date" | "round" | "group">("date");
-  const [dateFilter, setDateFilter] = useState<"finished" | "upcoming">("upcoming");
-
-  const [selectedRound, setSelectedRound] = useState<string>("Round 1");
-  const roundsList = [
-    "Round 1", 
-    "Round 2", 
-    "Round 3", 
-    "Round of 32", 
-    "Round of 16", 
-    "Quarterfinals", 
-    "Semifinals", 
-    "Match for 3rd place", 
-    "Final"
-  ];
-
-  const [selectedGroup, setSelectedGroup] = useState<string>("Group A");
-  const groupsList = [
-    "Group A", "Group B", "Group C", "Group D", "Group E", "Group F",
-    "Group G", "Group H", "Group I", "Group J", "Group K", "Group L"
-  ];
-
   const getMatchRound = (match: Match): string => {
     const g = match.group?.toLowerCase() || "";
     // Knockout stage — detect by group field or id pattern
@@ -110,6 +103,47 @@ export default function MatchesTab({
     if (idx <= 3) return "Round 2";
     return "Round 3";
   };
+
+  const [groupBy, setGroupBy] = useState<"date" | "round" | "group">("date");
+  const [dateFilter, setDateFilter] = useState<"finished" | "upcoming">("upcoming");
+
+  const [selectedRound, setSelectedRound] = useState<string>(() => {
+    // 1. If there are live matches, return the round of the first live match
+    if (liveMatches && liveMatches.length > 0) {
+      return getMatchRound(liveMatches[0]);
+    }
+    // 2. Otherwise, find the next upcoming match
+    const upcoming = matches.filter(m => m.status === "upcoming" || m.status === "live");
+    if (upcoming.length > 0) {
+      const sortedUpcoming = [...upcoming].sort((a, b) => new Date(a.datetime).getTime() - new Date(b.datetime).getTime());
+      return getMatchRound(sortedUpcoming[0]);
+    }
+    // 3. If there are no upcoming matches, default to the last completed match's round
+    const completed = matches.filter(m => m.status === "completed");
+    if (completed.length > 0) {
+      const sortedCompleted = [...completed].sort((a, b) => new Date(b.datetime).getTime() - new Date(a.datetime).getTime());
+      return getMatchRound(sortedCompleted[0]);
+    }
+    return "Round 1";
+  });
+
+  const roundsList = [
+    "Round 1", 
+    "Round 2", 
+    "Round 3", 
+    "Round of 32", 
+    "Round of 16", 
+    "Quarterfinals", 
+    "Semifinals", 
+    "Match for 3rd place", 
+    "Final"
+  ];
+
+  const [selectedGroup, setSelectedGroup] = useState<string>("Group A");
+  const groupsList = [
+    "Group A", "Group B", "Group C", "Group D", "Group E", "Group F",
+    "Group G", "Group H", "Group I", "Group J", "Group K", "Group L"
+  ];
 
   const handlePrevRound = () => {
     const idx = roundsList.indexOf(selectedRound);
@@ -132,13 +166,19 @@ export default function MatchesTab({
   };
 
   const getFilteredDateMatches = () => {
-    return matches.filter((m) => {
+    const filtered = matches.filter((m) => {
       if (dateFilter === "finished") {
         return m.status === "completed";
       } else {
         return m.status === "upcoming" || m.status === "live";
       }
     });
+
+    if (dateFilter === "finished") {
+      return [...filtered].sort((a, b) => new Date(b.datetime).getTime() - new Date(a.datetime).getTime());
+    } else {
+      return [...filtered].sort((a, b) => new Date(a.datetime).getTime() - new Date(b.datetime).getTime());
+    }
   };
 
   const matchesByDate: Record<string, Match[]> = {};
@@ -159,7 +199,7 @@ export default function MatchesTab({
         className="p-4 sm:p-6 flex flex-col sm:flex-row items-center justify-between hover:bg-slate-800/10 transition gap-4 cursor-pointer"
       >
         <div className="flex flex-col text-center sm:text-left sm:w-[30%]">
-          <span className="text-xs text-slate-400 font-semibold">{match.group}</span>
+          <span className="text-xs text-slate-400 font-semibold">{formatGroupOrRound(match.group)}</span>
           <span className="text-[10px] text-slate-505 flex items-center justify-center sm:justify-start mt-0.5 truncate">
             <MapPin className="w-3 h-3 mr-1 shrink-0" /> <span className="truncate">{match.stadium}</span>
           </span>
@@ -273,7 +313,7 @@ export default function MatchesTab({
                   className="bg-[#131b2e] border border-rose-500/20 p-5 rounded-2xl flex flex-col justify-between cursor-pointer"
                 >
                   <div className="flex justify-between items-center mb-4">
-                    <span className="text-xs text-slate-400 font-semibold">{match.group}</span>
+                    <span className="text-xs text-slate-400 font-semibold">{formatGroupOrRound(match.group)}</span>
                     <span className="bg-rose-500/10 text-rose-400 border border-rose-500/20 text-[10px] font-bold px-2 py-0.5 rounded-full animate-pulse">
                       {t("live")} {match.clock || `${match.minute}'`}
                     </span>

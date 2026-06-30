@@ -364,12 +364,19 @@ export function TeamsTab({
                           <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-wider border-b border-slate-800/40 pb-1.5">
                             <span className="text-emerald-500">{match.group}</span>
                             {isLive ? (
-                              <span className="text-rose-405 bg-rose-500/10 px-1.5 py-0.5 rounded animate-pulse">LIVE {match.clock || `${match.minute}'`}</span>
-                            ) : isUpcoming ? (
-                              <span className="text-slate-500">{formatMatchDate(match.datetime)}</span>
-                            ) : (
-                              <span className="text-slate-400 bg-slate-800/60 px-1.5 py-0.5 rounded">FT</span>
-                            )}
+                               <span className="text-rose-405 bg-rose-500/10 px-1.5 py-0.5 rounded animate-pulse">LIVE {match.clock || `${match.minute}'`}</span>
+                             ) : isUpcoming ? (
+                               <span className="text-slate-500">{formatMatchDate(match.datetime)}</span>
+                             ) : (
+                               (() => {
+                                 const hasShootout = match.homePenaltyScore !== undefined && match.awayPenaltyScore !== undefined;
+                                 return (
+                                   <span className={`px-1.5 py-0.5 rounded ${hasShootout ? "text-amber-400 bg-amber-500/10 border border-amber-500/20" : "text-slate-400 bg-slate-800/60"}`}>
+                                     {hasShootout ? "FT-PEN" : "FT"}
+                                   </span>
+                                 );
+                               })()
+                             )}
                           </div>
 
                           <div className="flex items-center space-x-2.5">
@@ -386,9 +393,43 @@ export function TeamsTab({
                             {isUpcoming ? (
                               <span className="font-black text-slate-300">{formatMatchTime(match.datetime)}</span>
                             ) : (
-                              <span className="font-black text-emerald-450 bg-emerald-500/5 px-2 py-0.5 rounded border border-emerald-500/10">
-                                {match.homeScore ?? 0} : {match.awayScore ?? 0}
-                              </span>
+                              (() => {
+                                const myScore = isHome ? (match.homeScore ?? 0) : (match.awayScore ?? 0);
+                                const opponentScore = isHome ? (match.awayScore ?? 0) : (match.homeScore ?? 0);
+                                const hasShootout = match.homePenaltyScore !== undefined && match.awayPenaltyScore !== undefined;
+                                const myPenaltyScore = hasShootout ? (isHome ? match.homePenaltyScore : match.awayPenaltyScore) : 0;
+                                const opponentPenaltyScore = hasShootout ? (isHome ? match.awayPenaltyScore : match.homePenaltyScore) : 0;
+
+                                let resultText = "";
+                                let badgeClass = "";
+
+                                if (myScore > opponentScore) {
+                                  resultText = `W ${myScore}:${opponentScore}`;
+                                  badgeClass = "text-emerald-400 bg-emerald-500/10 border-emerald-500/20";
+                                } else if (opponentScore > myScore) {
+                                  resultText = `L ${myScore}:${opponentScore}`;
+                                  badgeClass = "text-rose-405 bg-rose-500/10 border-rose-500/20";
+                                } else {
+                                  if (hasShootout && myPenaltyScore !== undefined && opponentPenaltyScore !== undefined) {
+                                    if (myPenaltyScore > opponentPenaltyScore) {
+                                      resultText = `W ${myScore}:${opponentScore} (${myPenaltyScore}-${opponentPenaltyScore})`;
+                                      badgeClass = "text-emerald-400 bg-emerald-500/10 border-emerald-500/20";
+                                    } else {
+                                      resultText = `L ${myScore}:${opponentScore} (${myPenaltyScore}-${opponentPenaltyScore})`;
+                                      badgeClass = "text-rose-405 bg-rose-500/10 border-rose-500/20";
+                                    }
+                                  } else {
+                                    resultText = `D ${myScore}:${opponentScore}`;
+                                    badgeClass = "text-slate-400 bg-slate-500/10 border-slate-500/20";
+                                  }
+                                }
+
+                                return (
+                                  <span className={`font-black px-2 py-0.5 rounded border ${badgeClass}`}>
+                                    {resultText}
+                                  </span>
+                                );
+                              })()
                             )}
                           </div>
                         </div>
