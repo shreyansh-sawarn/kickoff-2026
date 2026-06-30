@@ -264,7 +264,7 @@ export default function MatchDetails() {
       <div className="border-b border-slate-800/80 bg-[#0b0f19]/80 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
           <button 
-            onClick={() => router.push("/#matches")}
+            onClick={() => router.push("/matches")}
             className="flex items-center space-x-2 text-slate-450 hover:text-emerald-400 font-bold transition text-sm"
           >
             <ArrowLeft className="w-4 h-4" />
