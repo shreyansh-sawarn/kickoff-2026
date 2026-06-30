@@ -133,7 +133,9 @@ export async function getMatches(): Promise<Match[]> {
           playerTwo: extraData.playerTwo || undefined,
           score: extraData.score || undefined,
           isPenalty: isPenalty || extraData.isPenalty || false,
-          isShootoutPenalty: extraData.isShootoutPenalty || false,
+          isShootoutPenalty: extraData.isShootoutPenalty || (type === "shootout_penalty") || false,
+          didScore: extraData.didScore !== undefined ? extraData.didScore : (type === "shootout_penalty" ? true : undefined),
+          shotNumber: extraData.shotNumber || undefined,
           clockDisplay: extraData.clockDisplay || undefined
         };
       });
@@ -162,21 +164,43 @@ export async function getMatches(): Promise<Match[]> {
         }
       });
 
-      const matchEvents = nonAssists.sort((a: any, b: any) => a.minute - b.minute);
+      const matchEvents = nonAssists.sort((a: any, b: any) => {
+        const isShootoutA = a.isShootoutPenalty || a.type === "shootout_penalty";
+        const isShootoutB = b.isShootoutPenalty || b.type === "shootout_penalty";
+        if (isShootoutA && !isShootoutB) return 1;
+        if (!isShootoutA && isShootoutB) return -1;
+        if (isShootoutA && isShootoutB) {
+          const shotA = a.shotNumber || 0;
+          const shotB = b.shotNumber || 0;
+          if (shotA !== shotB) return shotA - shotB;
+          const aIsHome = a.teamId === m.home_team_code?.toLowerCase();
+          const bIsHome = b.teamId === m.home_team_code?.toLowerCase();
+          if (aIsHome && !bIsHome) return -1;
+          if (!aIsHome && bIsHome) return 1;
+          return 0;
+        }
+        return a.minute - b.minute;
+      });
 
-      let homePenaltyScore = matchEvents.filter((e: any) => e.isShootoutPenalty && e.teamId === m.home_team_code?.toLowerCase()).length;
-      let awayPenaltyScore = matchEvents.filter((e: any) => e.isShootoutPenalty && e.teamId === m.away_team_code?.toLowerCase()).length;
+      const hasShootout = matchEvents.some((e: any) => e.isShootoutPenalty);
+      let homePenaltyScore = matchEvents.filter((e: any) => e.isShootoutPenalty && e.didScore && e.teamId === m.home_team_code?.toLowerCase()).length;
+      let awayPenaltyScore = matchEvents.filter((e: any) => e.isShootoutPenalty && e.didScore && e.teamId === m.away_team_code?.toLowerCase()).length;
       
 
       let mappedGroup = m.group_name;
-      if (m.stage === "knockout" || ["r32", "r16", "qf", "sf", "final"].includes(m.stage)) {
-        const idStr = m.id.toLowerCase();
-        if (idStr.includes("match_104") || idStr.includes("final") || (idStr.includes("winner_match_101"))) mappedGroup = "final";
-        else if (idStr.includes("match_103") || idStr.includes("third") || idStr.includes("loser_match_101")) mappedGroup = "3rd";
-        else if (idStr.includes("match_101") || idStr.includes("match_102") || idStr.includes("winner_match_97") || idStr.includes("winner_match_98") || idStr.includes("winner_match_99") || idStr.includes("winner_match_100") || idStr.includes("sf")) mappedGroup = "sf";
-        else if (idStr.includes("match_97") || idStr.includes("match_98") || idStr.includes("match_99") || idStr.includes("match_100") || idStr.includes("winner_match_89") || idStr.includes("winner_match_90") || idStr.includes("winner_match_91") || idStr.includes("winner_match_92") || idStr.includes("winner_match_93") || idStr.includes("winner_match_94") || idStr.includes("winner_match_95") || idStr.includes("winner_match_96") || idStr.includes("qf")) mappedGroup = "qf";
-        else if (idStr.includes("match_89") || idStr.includes("match_90") || idStr.includes("match_91") || idStr.includes("match_92") || idStr.includes("match_93") || idStr.includes("match_94") || idStr.includes("match_95") || idStr.includes("match_96") || idStr.includes("winner_match_7") || idStr.includes("winner_match_8") || idStr.includes("r16")) mappedGroup = "r16";
-        else mappedGroup = "r32";
+      if (m.stage === "knockout" || ["r32", "r16", "qf", "sf", "final", "3rd"].includes(m.stage)) {
+        const stageVal = m.stage?.toLowerCase();
+        if (["r32", "r16", "qf", "sf", "final", "3rd"].includes(stageVal)) {
+          mappedGroup = stageVal;
+        } else {
+          const idStr = m.id.toLowerCase();
+          if (idStr.includes("match_104") || idStr.includes("final") || (idStr.includes("winner_match_101"))) mappedGroup = "final";
+          else if (idStr.includes("match_103") || idStr.includes("third") || idStr.includes("loser_match_101")) mappedGroup = "3rd";
+          else if (idStr.includes("match_101") || idStr.includes("match_102") || idStr.includes("winner_match_97") || idStr.includes("winner_match_98") || idStr.includes("winner_match_99") || idStr.includes("winner_match_100") || idStr.includes("sf")) mappedGroup = "sf";
+          else if (idStr.includes("match_97") || idStr.includes("match_98") || idStr.includes("match_99") || idStr.includes("match_100") || idStr.includes("winner_match_89") || idStr.includes("winner_match_90") || idStr.includes("winner_match_91") || idStr.includes("winner_match_92") || idStr.includes("winner_match_93") || idStr.includes("winner_match_94") || idStr.includes("winner_match_95") || idStr.includes("winner_match_96") || idStr.includes("qf")) mappedGroup = "qf";
+          else if (idStr.includes("match_89") || idStr.includes("match_90") || idStr.includes("match_91") || idStr.includes("match_92") || idStr.includes("match_93") || idStr.includes("match_94") || idStr.includes("match_95") || idStr.includes("match_96") || idStr.includes("winner_match_7") || idStr.includes("winner_match_8") || idStr.includes("r16")) mappedGroup = "r16";
+          else mappedGroup = "r32";
+        }
       }
 
       let minute = undefined;
@@ -186,14 +210,14 @@ export async function getMatches(): Promise<Match[]> {
       }
 
       return {
-        id: m.id,
+        id: m.id.startsWith("unknown_") ? m.id.replace("unknown_", "") : m.id,
         homeTeam: home || { id: "tbd", name: m.home_team || "TBD", code: "TBD", flag: "🏳️", confederation: "TBD", group: "TBD" },
         awayTeam: away || { id: "tbd", name: m.away_team || "TBD", code: "TBD", flag: "🏳️", confederation: "TBD", group: "TBD" },
         status,
         homeScore: m.home_score,
         awayScore: m.away_score,
-        homePenaltyScore: homePenaltyScore > 0 || awayPenaltyScore > 0 ? homePenaltyScore : undefined,
-        awayPenaltyScore: homePenaltyScore > 0 || awayPenaltyScore > 0 ? awayPenaltyScore : undefined,
+        homePenaltyScore: hasShootout ? homePenaltyScore : undefined,
+        awayPenaltyScore: hasShootout ? awayPenaltyScore : undefined,
         clock: m.clock,
         datetime: matchDatetime,
         minute,
@@ -432,7 +456,15 @@ export async function getStadiums(): Promise<Stadium[]> {
   return STADIUMS;
 }
 
+const resolveToUpstreamId = (matchId: string): string => {
+  if (matchId && !matchId.startsWith("group_") && !matchId.startsWith("unknown_")) {
+    return `unknown_${matchId}`;
+  }
+  return matchId;
+};
+
 export async function getMatchLineups(matchId: string): Promise<any> {
+  const upstreamId = resolveToUpstreamId(matchId);
   if (typeof window !== "undefined") {
     try {
       const res = await fetch(`/api/matches/${matchId}/lineups`);
@@ -448,7 +480,7 @@ export async function getMatchLineups(matchId: string): Promise<any> {
 
   const baseUrl = (process as any).env.WC26_API_BASE_URL || "https://kickoff-2026-api.fly.dev/api/v1";
   try {
-    const res = await fetch(`${baseUrl}/matches/${matchId}/lineups`, { cache: "no-store" });
+    const res = await fetch(`${baseUrl}/matches/${upstreamId}/lineups`, { cache: "no-store" });
     if (res.ok) {
       return await res.json();
     }
@@ -457,6 +489,7 @@ export async function getMatchLineups(matchId: string): Promise<any> {
 }
 
 export async function getMatchStats(matchId: string): Promise<any> {
+  const upstreamId = resolveToUpstreamId(matchId);
   if (typeof window !== "undefined") {
     try {
       const res = await fetch(`/api/matches/${matchId}/stats`);
@@ -472,7 +505,7 @@ export async function getMatchStats(matchId: string): Promise<any> {
 
   const baseUrl = (process as any).env.WC26_API_BASE_URL || "https://kickoff-2026-api.fly.dev/api/v1";
   try {
-    const res = await fetch(`${baseUrl}/matches/${matchId}/stats`, { cache: "no-store" });
+    const res = await fetch(`${baseUrl}/matches/${upstreamId}/stats`, { cache: "no-store" });
     if (res.ok) {
       return await res.json();
     }

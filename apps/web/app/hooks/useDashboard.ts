@@ -19,29 +19,40 @@ export function useDashboard() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     
-    const hash = window.location.hash.replace("#", "");
     const validTabs = ["dashboard", "matches", "standings", "teams", "knockout", "stadiums", "players", "archive", "predictions", "about", "news"];
-    if (hash && validTabs.includes(hash)) {
-      setActiveTabState(hash as TabType);
-    }
+    const getTabFromUrl = (): TabType => {
+      const path = window.location.pathname.replace("/", "");
+      if (validTabs.includes(path)) return path as TabType;
+      
+      const hash = window.location.hash.replace("#", "");
+      if (validTabs.includes(hash)) return hash as TabType;
+      
+      return "dashboard";
+    };
+
+    setActiveTabState(getTabFromUrl());
     
-    const handleHashChange = () => {
-      const newHash = window.location.hash.replace("#", "");
-      if (newHash && validTabs.includes(newHash)) {
-        setActiveTabState(newHash as TabType);
-      } else if (!newHash) {
-        setActiveTabState("dashboard");
-      }
+    const handlePopState = () => {
+      setActiveTabState(getTabFromUrl());
     };
     
+    const handleHashChange = () => {
+      setActiveTabState(getTabFromUrl());
+    };
+    
+    window.addEventListener("popstate", handlePopState);
     window.addEventListener("hashchange", handleHashChange);
-    return () => window.removeEventListener("hashchange", handleHashChange);
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+      window.removeEventListener("hashchange", handleHashChange);
+    };
   }, []);
-
+ 
   const setActiveTab = (tab: TabType) => {
     setActiveTabState(tab);
     if (typeof window !== "undefined") {
-      window.location.hash = tab;
+      const newPath = tab === "dashboard" ? "/" : `/${tab}`;
+      window.history.pushState(null, "", newPath + window.location.search);
     }
   };
 

@@ -32,4 +32,40 @@ module.exports = {
     ];
     return config;
   },
+  async rewrites() {
+    return [
+      {
+        source: '/matches',
+        destination: '/',
+      },
+      {
+        source: '/standings',
+        destination: '/',
+      },
+      {
+        source: '/teams',
+        destination: '/',
+      },
+      {
+        source: '/knockout',
+        destination: '/',
+      },
+      {
+        source: '/stadiums',
+        destination: '/',
+      },
+      {
+        source: '/players',
+        destination: '/',
+      },
+      {
+        source: '/predictions',
+        destination: '/',
+      },
+      {
+        source: '/news',
+        destination: '/',
+      },
+    ];
+  },
 };

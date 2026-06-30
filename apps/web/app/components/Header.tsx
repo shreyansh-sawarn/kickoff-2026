@@ -48,7 +48,7 @@ export default function Header({
             { id: "matches", label: t("matches"), icon: Calendar },
             { id: "standings", label: t("standings"), icon: BarChart3 },
             { id: "knockout", label: t("knockout"), icon: KnockoutIcon },
-            { id: "news", label: t("news"), icon: Award },
+            { id: "players", label: t("players"), icon: Users },
           ] as const).map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -81,16 +81,16 @@ export default function Header({
             <button
               onClick={() => setMoreMenuOpen(!moreMenuOpen)}
               className={`flex flex-col items-center justify-center w-14 sm:w-16 h-12 rounded-xl transition-all ${
-                ["players", "stadiums", "archive", "predictions", "about", "teams"].includes(activeTab)
+                ["news", "stadiums", "archive", "predictions", "about", "teams"].includes(activeTab)
                   ? "text-emerald-400 font-bold bg-emerald-500/10"
                   : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/40"
               }`}
             >
               <Sparkles className="w-5 h-5 mb-1 animate-pulse" />
               <span className="text-[9px] uppercase tracking-wide">
-                {["players", "stadiums", "archive", "predictions", "about", "teams"].includes(activeTab)
-                  ? activeTab === "players"
-                    ? t("players")
+                {["news", "stadiums", "archive", "predictions", "about", "teams"].includes(activeTab)
+                  ? activeTab === "news"
+                    ? t("news")
                     : activeTab === "stadiums"
                       ? t("stadiums")
                       : activeTab === "archive"
@@ -109,7 +109,7 @@ export default function Header({
               <div className="absolute right-0 mt-2 w-48 rounded-xl bg-slate-900 border border-slate-800 shadow-2xl z-50 p-1">
                 {([
                   { id: "teams", label: t("teams"), icon: Users },
-                  { id: "players", label: t("players"), icon: Users }, // Teams and Players use Users/User icons
+                  { id: "news", label: t("news"), icon: Award },
                   { id: "stadiums", label: t("stadiums"), icon: MapPin },
                   { id: "archive", label: t("archive"), icon: History },
                   { id: "predictions", label: t("predictions"), icon: Trophy },

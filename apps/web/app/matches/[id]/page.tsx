@@ -477,108 +477,227 @@ export default function MatchDetails() {
                   <div className="absolute top-6 bottom-6 left-1/2 w-0.5 bg-slate-850 transform -translate-x-1/2 z-0 hidden sm:block"></div>
 
                   <div className="space-y-8 z-10 relative">
-                    {match.events.filter(e => (e.type as string) !== "assist").map((event) => {
-                      const isHome = event.teamId === match.homeTeam.id;
+                    {(() => {
+                      let runningHomeScore = 0;
+                      let runningAwayScore = 0;
                       
+                      const normalEvents = match.events
+                        .filter(e => !e.isShootoutPenalty && (e.type as string) !== "assist")
+                        .map(event => {
+                          if (event.type === "goal" || event.type === "own_goal") {
+                            if (event.teamId === match.homeTeam.id) {
+                              runningHomeScore++;
+                            } else {
+                              runningAwayScore++;
+                            }
+                            return {
+                              ...event,
+                              score: `${runningHomeScore}:${runningAwayScore}`
+                            };
+                          }
+                          return event;
+                        });
+                      
+                      let runningHomePenaltyScore = 0;
+                      let runningAwayPenaltyScore = 0;
+                      
+                      const shootoutEvents = match.events
+                        .filter(e => e.isShootoutPenalty && (e.type as string) !== "assist")
+                        .map(event => {
+                          const isHome = event.teamId === match.homeTeam.id;
+                          if (event.didScore) {
+                            if (isHome) {
+                              runningHomePenaltyScore++;
+                            } else {
+                              runningAwayPenaltyScore++;
+                            }
+                          }
+                          return {
+                            ...event,
+                            runningScore: `${runningHomePenaltyScore}:${runningAwayPenaltyScore}`
+                          };
+                        });
+
                       return (
-                        <div 
-                          key={event.id}
-                          className={`flex flex-col sm:flex-row items-center justify-between ${
-                            isHome ? "" : "sm:flex-row-reverse"
-                          }`}
-                        >
-                          {/* Event Text Side */}
-                          <div className={`w-full sm:w-[45%] flex ${
-                            isHome ? "justify-end text-right" : "justify-start sm:text-left"
-                          } mb-2 sm:mb-0`}>
-                            <div className="bg-slate-900/60 border border-slate-800/80 p-3.5 rounded-xl max-w-xs shadow-md">
-                              <div className="flex items-center space-x-2">
-                                <span className="font-extrabold text-sm text-white">
-                                  {event.playerOne}
-                                </span>
-                                 {event.type === "goal" && (
-                                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="ml-1.5 shrink-0 shadow-sm rounded-full bg-white">
-                                    <defs>
-                                      <clipPath id="ball-clip">
-                                        <circle cx="12" cy="12" r="11" />
-                                      </clipPath>
-                                    </defs>
-                                    <circle cx="12" cy="12" r="11" fill="#f8fafc" />
-                                    <g clipPath="url(#ball-clip)">
-                                      <path d="M -2 4 Q 10 12 2 22" fill="none" stroke="#ef4444" strokeWidth="4.5" />
-                                      <path d="M 26 4 Q 14 12 22 22" fill="none" stroke="#3b82f6" strokeWidth="4.5" />
-                                      <path d="M 4 24 Q 12 15 20 24" fill="none" stroke="#22c55e" strokeWidth="4.5" />
-                                      <path d="M 8 4 Q 12 10 16 4" fill="none" stroke="#94a3b8" strokeWidth="1" />
-                                      <path d="M 4 18 Q 12 14 20 18" fill="none" stroke="#94a3b8" strokeWidth="1" />
-                                      <path d="M 12 10 L 12 14" fill="none" stroke="#94a3b8" strokeWidth="1" />
-                                    </g>
-                                    <circle cx="12" cy="12" r="11" stroke="#64748b" strokeWidth="1.5" />
-                                  </svg>
-                                )}
-                                {event.type === "own_goal" && (
-                                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="ml-1.5 shrink-0 shadow-sm rounded-full bg-white">
-                                     <defs>
-                                       <clipPath id="og-ball-clip-page">
-                                         <circle cx="12" cy="12" r="11" />
-                                       </clipPath>
-                                     </defs>
-                                     <circle cx="12" cy="12" r="11" fill="#fee2e2" />
-                                     <g clipPath="url(#og-ball-clip-page)">
-                                       <path d="M -2 4 Q 10 12 2 22" fill="none" stroke="#ef4444" strokeWidth="4.5" />
-                                       <path d="M 26 4 Q 14 12 22 22" fill="none" stroke="#dc2626" strokeWidth="4.5" />
-                                       <path d="M 4 24 Q 12 15 20 24" fill="none" stroke="#b91c1c" strokeWidth="4.5" />
-                                       <path d="M 8 4 Q 12 10 16 4" fill="none" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" />
-                                       <path d="M 4 18 Q 12 14 20 18" fill="none" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" />
-                                       <path d="M 12 10 L 12 14" fill="none" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" />
-                                     </g>
-                                     <circle cx="12" cy="12" r="11" stroke="#dc2626" strokeWidth="1.5" />
-                                   </svg>
-                                )}
-                                {event.type === "card_yellow" && <div className="w-2.5 h-[14px] bg-[#f5a623] rounded-[2px] ml-2 shrink-0 shadow-sm" />}
-                                {event.type === "card_red" && <div className="w-2.5 h-[14px] bg-[#e53e3e] rounded-[2px] ml-2 shrink-0 shadow-sm" />}
-                                {event.type === "substitution" && <span className="text-xs text-emerald-450 ml-1.5 shrink-0">🔄</span>}
-                              </div>
-                              
-                              {event.playerTwo && (
-                                <span className="text-[10px] text-slate-400 block mt-1">
-                                  {event.type === "substitution" ? `Out: ${event.playerTwo}` : `Assist: ${event.playerTwo}`}
-                                </span>
-                              )}
-                              
-                              {event.isPenalty && (
-                                <span className="text-[10px] text-slate-400 block mt-1">
-                                  Penalty Goal
-                                </span>
-                              )}
+                        <>
+                          {normalEvents.map((event) => {
+                            const isHome = event.teamId === match.homeTeam.id;
+                            
+                            return (
+                              <div 
+                                key={event.id}
+                                className={`flex flex-col sm:flex-row items-center justify-between ${
+                                  isHome ? "" : "sm:flex-row-reverse"
+                                }`}
+                              >
+                                {/* Event Text Side */}
+                                <div className={`w-full sm:w-[45%] flex ${
+                                  isHome ? "justify-end text-right" : "justify-start sm:text-left"
+                                } mb-2 sm:mb-0`}>
+                                  <div className="bg-slate-900/60 border border-slate-800/80 p-3.5 rounded-xl max-w-xs shadow-md">
+                                    <div className="flex items-center space-x-2">
+                                      <span className="font-extrabold text-sm text-white">
+                                        {event.playerOne}
+                                      </span>
+                                       {event.type === "goal" && (
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="ml-1.5 shrink-0 shadow-sm rounded-full bg-white">
+                                          <defs>
+                                            <clipPath id="ball-clip">
+                                              <circle cx="12" cy="12" r="11" />
+                                            </clipPath>
+                                          </defs>
+                                          <circle cx="12" cy="12" r="11" fill="#f8fafc" />
+                                          <g clipPath="url(#ball-clip)">
+                                            <path d="M -2 4 Q 10 12 2 22" fill="none" stroke="#ef4444" strokeWidth="4.5" />
+                                            <path d="M 26 4 Q 14 12 22 22" fill="none" stroke="#3b82f6" strokeWidth="4.5" />
+                                            <path d="M 4 24 Q 12 15 20 24" fill="none" stroke="#22c55e" strokeWidth="4.5" />
+                                            <path d="M 8 4 Q 12 10 16 4" fill="none" stroke="#94a3b8" strokeWidth="1" />
+                                            <path d="M 4 18 Q 12 14 20 18" fill="none" stroke="#94a3b8" strokeWidth="1" />
+                                            <path d="M 12 10 L 12 14" fill="none" stroke="#94a3b8" strokeWidth="1" />
+                                          </g>
+                                          <circle cx="12" cy="12" r="11" stroke="#64748b" strokeWidth="1.5" />
+                                        </svg>
+                                      )}
+                                      {event.type === "own_goal" && (
+                                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="ml-1.5 shrink-0 shadow-sm rounded-full bg-white">
+                                           <defs>
+                                             <clipPath id="og-ball-clip-page">
+                                               <circle cx="12" cy="12" r="11" />
+                                             </clipPath>
+                                           </defs>
+                                           <circle cx="12" cy="12" r="11" fill="#fee2e2" />
+                                           <g clipPath="url(#og-ball-clip-page)">
+                                             <path d="M -2 4 Q 10 12 2 22" fill="none" stroke="#ef4444" strokeWidth="4.5" />
+                                             <path d="M 26 4 Q 14 12 22 22" fill="none" stroke="#dc2626" strokeWidth="4.5" />
+                                             <path d="M 4 24 Q 12 15 20 24" fill="none" stroke="#b91c1c" strokeWidth="4.5" />
+                                             <path d="M 8 4 Q 12 10 16 4" fill="none" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" />
+                                             <path d="M 4 18 Q 12 14 20 18" fill="none" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" />
+                                             <path d="M 12 10 L 12 14" fill="none" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" />
+                                           </g>
+                                           <circle cx="12" cy="12" r="11" stroke="#dc2626" strokeWidth="1.5" />
+                                         </svg>
+                                      )}
+                                      {event.type === "card_yellow" && <div className="w-2.5 h-[14px] bg-[#f5a623] rounded-[2px] ml-2 shrink-0 shadow-sm" />}
+                                      {event.type === "card_red" && <div className="w-2.5 h-[14px] bg-[#e53e3e] rounded-[2px] ml-2 shrink-0 shadow-sm" />}
+                                      {event.type === "substitution" && <span className="text-xs text-emerald-450 ml-1.5 shrink-0">🔄</span>}
+                                    </div>
+                                    
+                                    {event.playerTwo && (
+                                      <span className="text-[10px] text-slate-400 block mt-1">
+                                        {event.type === "substitution" ? `Out: ${event.playerTwo}` : `Assist: ${event.playerTwo}`}
+                                      </span>
+                                    )}
+                                    
+                                    {event.isPenalty && (
+                                      <span className="text-[10px] text-slate-400 block mt-1">
+                                        Penalty Goal
+                                      </span>
+                                    )}
 
-                              {event.type === "own_goal" && (
-                                <span className="text-[10px] text-slate-400 block mt-1">
-                                  Own Goal
-                                </span>
-                              )}
-                              
-                              {event.detail && (
-                                <span className="text-[10px] text-amber-400 font-bold block mt-0.5">{event.detail}</span>
-                              )}
+                                    {event.type === "own_goal" && (
+                                      <span className="text-[10px] text-slate-400 block mt-1">
+                                        Own Goal
+                                      </span>
+                                    )}
+                                    
+                                    {event.detail && (
+                                      <span className="text-[10px] text-amber-400 font-bold block mt-0.5">{event.detail}</span>
+                                    )}
+                                  </div>
+                                </div>
+
+                                {/* Time Dot Center */}
+                                <div className="bg-slate-950 border-2 border-slate-800 w-10 h-10 rounded-full flex items-center justify-center z-10 shadow-lg shrink-0">
+                                  <span className="font-black text-xs text-emerald-400">{event.clockDisplay || event.minute}'</span>
+                                </div>
+
+                                {/* Scorecard on the opposite side */}
+                                <div className={`w-[45%] hidden sm:flex items-center ${isHome ? "justify-start" : "justify-end"}`}>
+                                  {(event.type === "goal" || event.type === "own_goal") && event.score && (
+                                    <div className="mx-3 text-sm font-black tracking-widest text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded border border-emerald-500/20 shadow-sm">
+                                      {event.score}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+
+                          {shootoutEvents.length > 0 && (
+                            <div className="flex flex-col items-center my-6 relative z-10">
+                              <div className="bg-[#131b2e] px-4 text-xs font-black uppercase tracking-widest text-amber-450 border border-amber-500/30 py-2 rounded-2xl shadow-lg flex items-center space-x-2">
+                                <span>⚽</span>
+                                <span>Penalty Shootout ({match.homePenaltyScore} - {match.awayPenaltyScore})</span>
+                              </div>
                             </div>
-                          </div>
+                          )}
 
-                          {/* Time Dot Center */}
-                          <div className="bg-slate-950 border-2 border-slate-800 w-10 h-10 rounded-full flex items-center justify-center z-10 shadow-lg shrink-0">
-                            <span className="font-black text-xs text-emerald-400">{(event as any).clockDisplay || event.minute}'</span>
-                          </div>
+                          {shootoutEvents.map((event) => {
+                            const isHome = event.teamId === match.homeTeam.id;
+                            
+                            return (
+                              <div 
+                                key={event.id}
+                                className={`flex flex-col sm:flex-row items-center justify-between ${
+                                  isHome ? "" : "sm:flex-row-reverse"
+                                }`}
+                              >
+                                {/* Event Text Side */}
+                                <div className={`w-full sm:w-[45%] flex ${
+                                  isHome ? "justify-end text-right" : "justify-start sm:text-left"
+                                } mb-2 sm:mb-0`}>
+                                  <div className="bg-slate-900/60 border border-slate-800/80 p-3.5 rounded-xl max-w-xs shadow-md">
+                                    <div className="flex items-center space-x-2">
+                                      <span className="font-extrabold text-sm text-white">
+                                        {event.playerOne}
+                                      </span>
+                                      {event.didScore ? (
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="ml-1.5 shrink-0 shadow-sm rounded-full bg-white">
+                                          <defs>
+                                            <clipPath id="ball-clip-shootout">
+                                              <circle cx="12" cy="12" r="11" />
+                                            </clipPath>
+                                          </defs>
+                                          <circle cx="12" cy="12" r="11" fill="#f8fafc" />
+                                          <g clipPath="url(#ball-clip-shootout)">
+                                            <path d="M -2 4 Q 10 12 2 22" fill="none" stroke="#ef4444" strokeWidth="4.5" />
+                                            <path d="M 26 4 Q 14 12 22 22" fill="none" stroke="#3b82f6" strokeWidth="4.5" />
+                                            <path d="M 4 24 Q 12 15 20 24" fill="none" stroke="#22c55e" strokeWidth="4.5" />
+                                            <path d="M 8 4 Q 12 10 16 4" fill="none" stroke="#94a3b8" strokeWidth="1" />
+                                            <path d="M 4 18 Q 12 14 20 18" fill="none" stroke="#94a3b8" strokeWidth="1" />
+                                            <path d="M 12 10 L 12 14" fill="none" stroke="#94a3b8" strokeWidth="1" />
+                                          </g>
+                                          <circle cx="12" cy="12" r="11" stroke="#64748b" strokeWidth="1.5" />
+                                        </svg>
+                                      ) : (
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="ml-1.5 shrink-0 shadow-sm rounded-full bg-red-100 border border-red-500 flex items-center justify-center p-0.5">
+                                          <path d="M18 6L6 18M6 6l12 12" stroke="#dc2626" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                                        </svg>
+                                      )}
+                                    </div>
+                                    <span className={`text-[10px] font-bold block mt-1 ${event.didScore ? "text-emerald-450" : "text-rose-500"}`}>
+                                      {event.didScore ? "Penalty Scored" : "Penalty Missed"}
+                                    </span>
+                                  </div>
+                                </div>
 
-                          {/* Scorecard on the opposite side */}
-                          <div className={`w-[45%] hidden sm:flex items-center ${isHome ? "justify-end" : "justify-start"}`}>
-                            {event.type === "goal" && event.score && (
-                              <div className="mx-3 text-sm font-black tracking-widest text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded border border-emerald-500/20 shadow-sm">
-                                {event.score}
+                                {/* Time Dot Center */}
+                                <div className="bg-slate-950 border-2 border-amber-500/40 w-10 h-10 rounded-full flex items-center justify-center z-10 shadow-lg shrink-0">
+                                  <span className="font-black text-xs text-amber-400">P{event.shotNumber}</span>
+                                </div>
+
+                                {/* Scorecard on the opposite side */}
+                                <div className={`w-[45%] hidden sm:flex items-center ${isHome ? "justify-start" : "justify-end"}`}>
+                                  <div className="mx-3 text-sm font-black tracking-widest text-amber-400 bg-amber-500/10 px-2 py-1 rounded border border-amber-500/20 shadow-sm">
+                                    {event.runningScore}
+                                  </div>
+                                </div>
                               </div>
-                            )}
-                          </div>
-                        </div>
+                            );
+                          })}
+                        </>
                       );
-                    })}
+                    })()}
                   </div>
                 </div>
               ) : (
