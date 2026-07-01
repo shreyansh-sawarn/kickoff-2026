@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { getMatchById, getMatchLineups, getMatchStats } from "@wc26/api";
 import { Match } from "@wc26/types";
 import { getCountryFlag, formatFullMatchDateTime, getFlagCdnUrl } from "@wc26/utils";
-import { ArrowLeft, Clock, MapPin, Award, Users, AlignLeft, RefreshCw } from "lucide-react";
+import { ArrowLeft, Clock, MapPin, Award, Users, AlignLeft, RefreshCw, Check, X } from "lucide-react";
 import PitchLineup from "../../components/PitchLineup";
 
 export default function MatchDetails() {
@@ -15,7 +15,18 @@ export default function MatchDetails() {
 
   const [match, setMatch] = useState<Match | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeSubTab, setActiveSubTab] = useState<"lineup" | "stats" | "events">("lineup");
+  const [activeSubTab, setActiveSubTab] = useState<"lineup" | "stats" | "events" | "shootout">("lineup");
+
+  const getJerseyNumber = (playerName: string, isHome: boolean) => {
+    if (!match?.lineups) return "";
+    const teamLineup = isHome ? match.lineups.home : match.lineups.away;
+    if (!teamLineup) return "";
+    const player = [
+      ...(teamLineup.startingXI || []),
+      ...(teamLineup.substitutes || [])
+    ].find((p: any) => p.name.trim().toLowerCase() === playerName.trim().toLowerCase());
+    return player ? `#${player.number}` : "";
+  };
 
   useEffect(() => {
     async function loadMatch(silent = false) {
@@ -348,32 +359,44 @@ export default function MatchDetails() {
 
       {/* Tabs */}
       <div className="max-w-4xl mx-auto px-4 mt-8">
-        <div className="flex border-b border-slate-850 p-1 bg-[#131b2e]/40 rounded-xl max-w-md mx-auto">
-          {(
-            [
-              { id: "lineup", label: "Lineups", icon: Users },
-              { id: "stats", label: "Match Stats", icon: AlignLeft },
-              { id: "events", label: "Timeline", icon: Clock },
-            ] as const
-          ).map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeSubTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveSubTab(tab.id)}
-                className={`flex-1 flex items-center justify-center space-x-2 py-2 rounded-lg text-xs font-bold transition-all ${
-                  isActive
-                    ? "bg-emerald-500 text-white shadow-md"
-                    : "text-slate-400 hover:text-slate-200"
-                }`}
-              >
-                <Icon className="w-3.5 h-3.5" />
-                <span>{tab.label}</span>
-              </button>
-            );
-          })}
-        </div>
+        {(() => {
+          const hasShootout = match.events?.some((e) => e.isShootoutPenalty) || 
+                              (match.homePenaltyScore !== undefined && match.homePenaltyScore !== null) || 
+                              (match.awayPenaltyScore !== undefined && match.awayPenaltyScore !== null);
+
+          const tabs: Array<{ id: "lineup" | "stats" | "events" | "shootout"; label: string; icon: any }> = [
+            { id: "lineup", label: "Lineups", icon: Users },
+            { id: "stats", label: "Match Stats", icon: AlignLeft },
+            { id: "events", label: "Timeline", icon: Clock },
+          ];
+
+          if (hasShootout) {
+            tabs.push({ id: "shootout", label: "Shootout", icon: Award });
+          }
+
+          return (
+            <div className="flex border-b border-slate-850 p-1 bg-[#131b2e]/40 rounded-xl max-w-lg mx-auto">
+              {tabs.map((tab) => {
+                const Icon = tab.icon;
+                const isActive = activeSubTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveSubTab(tab.id)}
+                    className={`flex-1 flex items-center justify-center space-x-2 py-2 rounded-lg text-xs font-bold transition-all ${
+                      isActive
+                        ? "bg-emerald-500 text-white shadow-md"
+                        : "text-slate-400 hover:text-slate-200"
+                    }`}
+                  >
+                    <Icon className="w-3.5 h-3.5" />
+                    <span>{tab.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          );
+        })()}
 
         {/* Tab contents */}
         <div className="mt-8">
@@ -705,6 +728,135 @@ export default function MatchDetails() {
                   <p className="text-slate-400 text-sm">Key events (Goals, Cards, Substitutions) will appear here chronologically.</p>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* SHOOTOUT TAB */}
+          {activeSubTab === "shootout" && (
+            <div className="max-w-xl mx-auto space-y-6">
+              {(() => {
+                const shootoutEvents = match.events?.filter((e) => e.isShootoutPenalty) || [];
+                
+                // Group by round/shotNumber
+                const roundsMap: Record<number, { home?: any; away?: any }> = {};
+                shootoutEvents.forEach((event) => {
+                  const shotNum = event.shotNumber || 1;
+                  if (!roundsMap[shotNum]) {
+                    roundsMap[shotNum] = {};
+                  }
+                  if (event.teamId === match.homeTeam.id) {
+                    roundsMap[shotNum].home = event;
+                  } else {
+                    roundsMap[shotNum].away = event;
+                  }
+                });
+
+                const maxRound = Math.max(...Object.keys(roundsMap).map(Number), 5);
+                const roundsList = Array.from({ length: maxRound }, (_, i) => i + 1);
+
+                // Compute shootout title
+                const homeWon = (match.homePenaltyScore || 0) > (match.awayPenaltyScore || 0);
+                const winnerName = homeWon ? match.homeTeam.name : match.awayTeam.name;
+                const winnerScore = homeWon ? match.homePenaltyScore : match.awayPenaltyScore;
+                const loserScore = homeWon ? match.awayPenaltyScore : match.homePenaltyScore;
+                const titleText = match.status === "completed" 
+                  ? `${winnerName} advances ${winnerScore}-${loserScore} on penalties`
+                  : `Penalty Shootout (${match.homePenaltyScore || 0} - ${match.awayPenaltyScore || 0})`;
+
+                return (
+                  <div className="bg-[#131b2e] border border-slate-800 rounded-2xl p-6 space-y-6">
+                    {/* Header */}
+                    <div className="flex items-center justify-between border-b border-slate-850 pb-4 mb-4">
+                      <div className="flex items-center space-x-3 w-1/3">
+                        <img src={getFlagCdnUrl(match.homeTeam.code)} alt="" className="w-8 h-5 object-cover rounded shadow" />
+                        <span className="font-bold text-slate-200 text-sm">{match.homeTeam.code}</span>
+                      </div>
+                      <div className="flex flex-col items-center text-center w-1/3">
+                        <span className="font-extrabold text-sm text-white">{titleText}</span>
+                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">Penalty Shootout</span>
+                      </div>
+                      <div className="flex items-center justify-end space-x-3 w-1/3">
+                        <span className="font-bold text-slate-200 text-sm">{match.awayTeam.code}</span>
+                        <img src={getFlagCdnUrl(match.awayTeam.code)} alt="" className="w-8 h-5 object-cover rounded shadow" />
+                      </div>
+                    </div>
+
+                    {/* Shootout Rounds */}
+                    <div className="space-y-4">
+                      {roundsList.map((roundNum) => {
+                        const { home, away } = roundsMap[roundNum] || {};
+                        return (
+                          <div key={roundNum} className="flex items-center justify-between py-2 border-b border-slate-850/40 last:border-0">
+                            {/* Left Taker (Home) */}
+                            <div className="w-[42%] text-left">
+                              {home ? (
+                                <div>
+                                  <div className="font-bold text-sm text-white truncate">{home.playerOne}</div>
+                                  <div className="text-[10px] text-slate-400 mt-0.5">
+                                    {getJerseyNumber(home.playerOne, true) ? `${getJerseyNumber(home.playerOne, true)} • ` : ""}Penalty - {home.didScore ? "Scored" : "Missed"}
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="text-slate-500 text-xs italic">-</div>
+                              )}
+                            </div>
+
+                            {/* Center Status Indicators */}
+                            <div className="w-[16%] flex items-center justify-center space-x-2 shrink-0">
+                              {/* Home Outcome */}
+                              {home ? (
+                                home.didScore ? (
+                                  <div className="w-6 h-6 rounded-full bg-emerald-600 flex items-center justify-center text-white shadow-md">
+                                    <Check className="w-3.5 h-3.5 stroke-[3.5]" />
+                                  </div>
+                                ) : (
+                                  <div className="w-6 h-6 rounded-full bg-rose-600 flex items-center justify-center text-white shadow-md">
+                                    <X className="w-3.5 h-3.5 stroke-[3.5]" />
+                                  </div>
+                                )
+                              ) : (
+                                <div className="w-6 h-6 rounded-full border border-slate-800 bg-slate-900/40" />
+                              )}
+
+                              {/* Round Number */}
+                              <span className="text-xs font-bold text-slate-400 w-4 text-center">{roundNum}</span>
+
+                              {/* Away Outcome */}
+                              {away ? (
+                                away.didScore ? (
+                                  <div className="w-6 h-6 rounded-full bg-emerald-600 flex items-center justify-center text-white shadow-md">
+                                    <Check className="w-3.5 h-3.5 stroke-[3.5]" />
+                                  </div>
+                                ) : (
+                                  <div className="w-6 h-6 rounded-full bg-rose-600 flex items-center justify-center text-white shadow-md">
+                                    <X className="w-3.5 h-3.5 stroke-[3.5]" />
+                                  </div>
+                                )
+                              ) : (
+                                <div className="w-6 h-6 rounded-full border border-slate-800 bg-slate-900/40" />
+                              )}
+                            </div>
+
+                            {/* Right Taker (Away) */}
+                            <div className="w-[42%] text-right">
+                              {away ? (
+                                <div>
+                                  <div className="font-bold text-sm text-white truncate">{away.playerOne}</div>
+                                  <div className="text-[10px] text-slate-400 mt-0.5">
+                                    Penalty - {away.didScore ? "Scored" : "Missed"}{getJerseyNumber(away.playerOne, false) ? ` • ${getJerseyNumber(away.playerOne, false)}` : ""}
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="text-slate-500 text-xs italic">-</div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           )}
         </div>
