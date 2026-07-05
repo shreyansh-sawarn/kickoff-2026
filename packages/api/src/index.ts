@@ -66,7 +66,7 @@ export async function getTeamById(id: string): Promise<Team | undefined> {
 export async function getMatches(): Promise<Match[]> {
   if (typeof window !== "undefined") {
     try {
-      const res = await fetch("/api/matches");
+      const res = await fetch("/api/matches", { cache: "no-store" });
       if (res.ok) {
         const json = await res.json();
         if (json.success && json.data) {
