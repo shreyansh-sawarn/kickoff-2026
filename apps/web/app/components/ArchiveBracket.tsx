@@ -375,8 +375,8 @@ export function ArchiveBracket({ knockout }: ArchiveBracketProps) {
                       cardBgClass = "bg-[#1c1917]/90";
                     }
 
-                    const lineHighlightClass = "bg-slate-700/60";
-                    const lineHoverClass = `group-hover:bg-emerald-400/90 ${lineHighlightClass} transition-colors duration-300`;
+                    const lineHighlightClass = "bg-slate-800/60";
+                    const lineHoverClass = `group-hover:bg-slate-700/80 ${lineHighlightClass} transition-colors duration-300`;
 
                     // Calculate connector line vertical height for this column
                     const getVH = () => {
@@ -398,17 +398,55 @@ export function ArchiveBracket({ knockout }: ArchiveBracketProps) {
                     const isPathLost = pathStatus === 'lost';
                     const isDimmed = !!hoveredTeam && !isInPath;
 
-                    // Override card styling for path highlighting
-                    if (isPathWon) {
-                      cardBorderClass = "border-emerald-500/70 shadow-[0_0_20px_rgba(16,185,129,0.3)]";
-                      cardBgClass = "bg-[#0d1f1a]";
-                    } else if (isPathLost) {
-                      cardBorderClass = "border-red-500/60 shadow-[0_0_20px_rgba(239,68,68,0.3)]";
-                      cardBgClass = "bg-[#1f0f0f]";
+                    let homeBorderClass = cardBorderClass;
+                    let awayBorderClass = cardBorderClass;
+                    let homeBgClass     = cardBgClass;
+                    let awayBgClass     = cardBgClass;
+
+                    // Override card styling for path highlighting (outline only)
+                    if (isInPath) {
+                      if (isPathWon) {
+                        if (item.homeTeam === hoveredTeam) {
+                          homeBorderClass = "border-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.25)]";
+                        } else if (item.awayTeam === hoveredTeam) {
+                          awayBorderClass = "border-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.25)]";
+                        }
+                      } else if (isPathLost) {
+                        if (item.homeTeam === hoveredTeam) {
+                          homeBorderClass = "border-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.25)]";
+                        } else if (item.awayTeam === hoveredTeam) {
+                          awayBorderClass = "border-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.25)]";
+                        }
+                      } else {
+                        // upcoming
+                        if (item.homeTeam === hoveredTeam) {
+                          homeBorderClass = "border-cyan-500/60 shadow-[0_0_8px_rgba(6,182,212,0.15)]";
+                        } else if (item.awayTeam === hoveredTeam) {
+                          awayBorderClass = "border-cyan-500/60 shadow-[0_0_8px_rgba(6,182,212,0.15)]";
+                        }
+                      }
                     }
 
+                    const getHomeNameColor = () => {
+                      if (hoveredTeam && item.homeTeam === hoveredTeam && isInPath) {
+                        if (isPathWon) return "text-emerald-400 font-extrabold";
+                        if (isPathLost) return "text-rose-400 font-extrabold";
+                        return "text-cyan-400 font-extrabold";
+                      }
+                      return isHomeWinner ? "text-slate-100 font-extrabold" : "text-slate-400";
+                    };
+
+                    const getAwayNameColor = () => {
+                      if (hoveredTeam && item.awayTeam === hoveredTeam && isInPath) {
+                        if (isPathWon) return "text-emerald-400 font-extrabold";
+                        if (isPathLost) return "text-rose-400 font-extrabold";
+                        return "text-cyan-400 font-extrabold";
+                      }
+                      return isAwayWinner ? "text-slate-100 font-extrabold" : "text-slate-400";
+                    };
+
                     // Connector class for outgoing horizontal + vertical from this match
-                    const pathGlow = "bg-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.5)]";
+                    const pathGlow = "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]";
                     const pathDim = "bg-slate-800/20";
                     const myConnectorClass = isConnectorInPath(colIdx, idx)
                       ? pathGlow
@@ -429,15 +467,17 @@ export function ArchiveBracket({ knockout }: ArchiveBracketProps) {
                         </div>
 
                         {/* Home team */}
-                        <div className={`flex justify-between items-center px-3.5 py-2.5 ${cardBgClass} border ${cardBorderClass} rounded-2xl shadow-sm transition-all duration-300`}>
+                        <div 
+                          className={`flex justify-between items-center px-3.5 py-2.5 ${homeBgClass} border ${homeBorderClass} rounded-2xl shadow-sm transition-all duration-300 cursor-pointer`}
+                          onMouseEnter={() => setHoveredTeam(item.homeTeam)}
+                          onMouseLeave={() => setHoveredTeam(null)}
+                        >
                           <div className="flex items-center space-x-2.5">
                             <div className="w-6 h-4 relative overflow-hidden rounded-sm shadow-sm shrink-0">
                               <img src={getFlagCdnUrl(item.homeCode)} alt="" className="w-full h-full object-cover" />
                             </div>
                             <span
-                              className={`text-xs font-semibold ${isHomeWinner ? "text-slate-100 font-extrabold" : "text-slate-400"} cursor-pointer hover:text-emerald-400 transition-colors duration-200`}
-                              onMouseEnter={() => setHoveredTeam(item.homeTeam)}
-                              onMouseLeave={() => setHoveredTeam(null)}
+                              className={`text-xs font-semibold transition-colors duration-200 ${getHomeNameColor()}`}
                             >
                               {item.homeTeam}
                             </span>
@@ -446,20 +486,22 @@ export function ArchiveBracket({ knockout }: ArchiveBracketProps) {
                         </div>
 
                         {/* Away team */}
-                        <div className={`flex justify-between items-center px-3.5 py-2.5 ${cardBgClass} border ${cardBorderClass} rounded-2xl shadow-sm transition-all duration-300`}>
+                        <div 
+                          className={`flex justify-between items-center px-3.5 py-2.5 ${awayBgClass} border ${awayBorderClass} rounded-2xl shadow-sm transition-all duration-300 cursor-pointer`}
+                          onMouseEnter={() => setHoveredTeam(item.awayTeam)}
+                          onMouseLeave={() => setHoveredTeam(null)}
+                        >
                           <div className="flex items-center space-x-2.5">
                             <div className="w-6 h-4 relative overflow-hidden rounded-sm shadow-sm shrink-0">
                               <img src={getFlagCdnUrl(item.awayCode)} alt="" className="w-full h-full object-cover" />
                             </div>
                             <span
-                              className={`text-xs font-semibold ${isAwayWinner ? "text-slate-100 font-extrabold" : "text-slate-400"} cursor-pointer hover:text-emerald-400 transition-colors duration-200`}
-                              onMouseEnter={() => setHoveredTeam(item.awayTeam)}
-                              onMouseLeave={() => setHoveredTeam(null)}
+                              className={`text-xs font-semibold transition-colors duration-200 ${getAwayNameColor()}`}
                             >
                               {item.awayTeam}
                             </span>
                           </div>
-                          <span className={`text-xs font-black ${isAwayWinner ? "text-emerald-450" : "text-slate-500"}`}>{item.awayScore}</span>
+                          <span className={`text-xs font-black ${isAwayWinner ? "text-emerald-500" : "text-slate-500"}`}>{item.awayScore}</span>
                         </div>
 
                         {/* Match details (like Penalties status) */}
@@ -530,64 +572,77 @@ export function ArchiveBracket({ knockout }: ArchiveBracketProps) {
     </div>
   );
 
-  const canvas = (
-    <div className={`relative bg-[#090d16] border border-slate-800/60 rounded-2xl overflow-hidden ${isFullscreen ? "flex-1" : ""}`} style={{ height: isFullscreen ? undefined : "600px" }}>
-      <div
-        ref={viewportRef}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseLeave}
-        onDoubleClick={handleDoubleClick}
-        className={`w-full h-full overflow-auto select-none ${isDragging ? "cursor-grabbing" : "cursor-grab"}`}
-      >
-        {bracketWorld}
-      </div>
+   const canvas = (
+     <div className={`relative bg-[#090d16] border border-slate-800/60 rounded-2xl overflow-hidden ${isFullscreen ? "flex-1" : ""}`} style={{ height: isFullscreen ? undefined : "600px" }}>
+       <div
+         ref={viewportRef}
+         onMouseDown={handleMouseDown}
+         onMouseMove={handleMouseMove}
+         onMouseUp={handleMouseUp}
+         onMouseLeave={handleMouseLeave}
+         onDoubleClick={handleDoubleClick}
+         className={`w-full h-full overflow-auto select-none ${isDragging ? "cursor-grabbing" : "cursor-grab"}`}
+       >
+         {bracketWorld}
+       </div>
+     </div>
+   );
 
-      <div className="absolute right-4 top-4 z-20 flex flex-col space-y-2 pointer-events-auto">
-        <button onClick={() => zoomBy(1.2)} className="bg-[#131b2e] border border-slate-800 text-slate-200 rounded-xl p-2.5 hover:bg-slate-800 transition" title="Zoom In">
-          <ZoomIn className="w-4 h-4" />
-        </button>
-        <button onClick={() => zoomBy(1 / 1.2)} className="bg-[#131b2e] border border-slate-800 text-slate-200 rounded-xl p-2.5 hover:bg-slate-800 transition" title="Zoom Out">
-          <ZoomOut className="w-4 h-4" />
-        </button>
-        <button onClick={resetView} className="bg-[#131b2e] border border-slate-800 text-slate-200 rounded-xl p-2.5 hover:bg-slate-800 transition" title="Reset View">
-          <RotateCcw className="w-4 h-4" />
-        </button>
-      </div>
+   return (
+     <div
+       className={
+         isFullscreen
+           ? "fixed inset-0 z-50 bg-[#0b0f19] flex flex-col p-6 overflow-hidden animate-in fade-in duration-200"
+           : "flex flex-col space-y-4"
+       }
+       style={isFullscreen ? { height: "100dvh" } : undefined}
+     >
+       <div className="flex items-center justify-between border-b border-slate-800/40 pb-4 shrink-0">
+         <div className="flex items-center space-x-3">
+           <KnockoutIcon className="w-5 h-5 text-emerald-400 overflow-visible" strokeWidth={1.8} />
+           <h3 className="text-lg font-bold text-white uppercase tracking-wider">Historical Bracket</h3>
+         </div>
+         <div className="flex items-center space-x-3">
+           <span className="text-xs text-slate-500 hidden sm:block">Scroll to zoom · Drag to pan · Double-click to reset</span>
 
-      <div className="absolute left-4 bottom-4 z-20 text-[10px] font-black text-slate-600 select-none tabular-nums">
-        {Math.round(zoom * 100)}%
-      </div>
-    </div>
-  );
+           <div className="flex items-center bg-[#131b2e] border border-slate-800 rounded-xl p-1 space-x-1">
+             <button
+               onClick={() => zoomBy(1 / 1.2)}
+               className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition"
+               title="Zoom Out"
+             >
+               <ZoomOut className="w-4 h-4" />
+             </button>
+             <span className="text-xs font-bold text-slate-300 min-w-[36px] text-center select-none tabular-nums">
+               {Math.round(zoom * 100)}%
+             </span>
+             <button
+               onClick={() => zoomBy(1.2)}
+               className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition"
+               title="Zoom In"
+             >
+               <ZoomIn className="w-4 h-4" />
+             </button>
+             <div className="w-[1px] h-4 bg-slate-800 mx-1" />
+             <button
+               onClick={resetView}
+               className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition"
+               title="Reset View"
+             >
+               <RotateCcw className="w-4 h-4" />
+             </button>
+           </div>
 
-  return (
-    <div
-      className={
-        isFullscreen
-          ? "fixed inset-0 z-50 bg-[#0b0f19] flex flex-col p-6 overflow-hidden animate-in fade-in duration-200"
-          : "flex flex-col space-y-4"
-      }
-      style={isFullscreen ? { height: "100dvh" } : undefined}
-    >
-      <div className="flex items-center justify-between border-b border-slate-800/40 pb-4 shrink-0">
-        <div className="flex items-center space-x-3">
-          <KnockoutIcon className="w-5 h-5 text-emerald-400 overflow-visible" strokeWidth={1.8} />
-          <h3 className="text-lg font-bold text-white uppercase tracking-wider">Historical Bracket</h3>
-        </div>
-        <div className="flex items-center space-x-3">
-          <span className="text-xs text-slate-500 hidden sm:block">Scroll to zoom · Drag to pan · Double-click to reset</span>
-          <button
-            onClick={() => setIsFullscreen(!isFullscreen)}
-            className="bg-[#1e293b] border border-slate-700 rounded-xl p-2.5 flex items-center justify-center hover:bg-slate-800 transition text-slate-200"
-            title={isFullscreen ? "Exit Fullscreen" : "Fullscreen View"}
-          >
-            {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
-          </button>
-        </div>
-      </div>
-      {canvas}
-    </div>
-  );
+           <button
+             onClick={() => setIsFullscreen(!isFullscreen)}
+             className="bg-[#1e293b] border border-slate-700 rounded-xl p-2.5 flex items-center justify-center hover:bg-slate-800 transition text-slate-200"
+             title={isFullscreen ? "Exit Fullscreen" : "Fullscreen View"}
+           >
+             {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+           </button>
+         </div>
+       </div>
+       {canvas}
+     </div>
+   );
 }

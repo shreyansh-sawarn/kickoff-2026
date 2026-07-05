@@ -63,7 +63,7 @@ const formatGroupOrRound = (group: string): string => {
   if (g === "qf") return "QF";
   if (g === "sf") return "SF";
   if (g === "3rd") return "3rd Place";
-  if (g === "final") return "Final";
+  if (g === "final") return "2026 FIFA World Cup Final";
   if (g.startsWith("group")) {
     return group.charAt(0).toUpperCase() + group.slice(1);
   }
@@ -105,7 +105,36 @@ export default function MatchesTab({
   };
 
   const [groupBy, setGroupBy] = useState<"date" | "round" | "group">("date");
-  const [dateFilter, setDateFilter] = useState<"finished" | "upcoming">("upcoming");
+  const [dateFilter, setDateFilter] = useState<"finished" | "upcoming">(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const filter = params.get("filter");
+      if (filter === "finished" || filter === "upcoming") {
+        return filter;
+      }
+    }
+    return "upcoming";
+  });
+
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (groupBy === "date") {
+        if (params.get("filter") !== dateFilter) {
+          params.set("filter", dateFilter);
+          const newUrl = `${window.location.pathname}?${params.toString()}`;
+          window.history.replaceState(null, "", newUrl);
+        }
+      } else {
+        if (params.has("filter")) {
+          params.delete("filter");
+          const searchStr = params.toString();
+          const newUrl = searchStr ? `${window.location.pathname}?${searchStr}` : window.location.pathname;
+          window.history.replaceState(null, "", newUrl);
+        }
+      }
+    }
+  }, [groupBy, dateFilter]);
 
   const [selectedRound, setSelectedRound] = useState<string>(() => {
     // 1. If there are live matches, return the round of the first live match

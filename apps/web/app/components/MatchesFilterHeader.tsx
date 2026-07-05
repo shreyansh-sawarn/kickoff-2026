@@ -76,7 +76,7 @@ export function MatchesFilterHeader({
               <button
                 onClick={() => setDateFilter("finished")}
                 className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider transition ${
-                  dateFilter === "finished" ? "bg-slate-800 text-white" : "text-slate-500 hover:text-slate-350"
+                  dateFilter === "finished" ? "bg-white text-slate-950 shadow animate-in fade-in" : "text-slate-500 hover:text-slate-350"
                 }`}
               >
                 Finished

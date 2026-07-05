@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useImperativeHandle, forwardRef } from "react";
 import { ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
 import { getFlagCdnUrl } from "@wc26/utils";
 import { Match } from "@wc26/types";
@@ -6,23 +6,35 @@ import { Match } from "@wc26/types";
 interface BracketCanvasProps {
   router: { push: (url: string) => void };
   matches?: Match[];
+  onZoomChange?: (zoom: number) => void;
 }
 
-export function BracketCanvas({ router, matches = [] }: BracketCanvasProps) {
-  const WORLD_W = 3150;
-  const WORLD_H = 1300;
+export const BracketCanvas = forwardRef<any, BracketCanvasProps>(
+  ({ router, matches = [], onZoomChange }, ref) => {
+    const WORLD_W = 3150;
+    const WORLD_H = 1300;
 
-  const [zoom, setZoom]           = useState(0.4);
-  const [isDragging, setIsDragging]     = useState(false);
-  const [hoveredTeam, setHoveredTeam]   = useState<string | null>(null);
+    const [zoom, setZoom]           = useState(0.4);
+    const [isDragging, setIsDragging]     = useState(false);
+    const [hoveredTeam, setHoveredTeam]   = useState<string | null>(null);
 
-  const viewportRef = useRef<HTMLDivElement>(null);
-  const dragOrigin = useRef({ x: 0, y: 0, scrollLeft: 0, scrollTop: 0 });
-  const lastSize = useRef({ width: 0, height: 0 });
+    const viewportRef = useRef<HTMLDivElement>(null);
+    const dragOrigin = useRef({ x: 0, y: 0, scrollLeft: 0, scrollTop: 0 });
+    const lastSize = useRef({ width: 0, height: 0 });
 
-  const getFitZoom = useCallback(() => {
-    if (!viewportRef.current) return 0.4;
-    const vw = viewportRef.current.clientWidth;
+    useImperativeHandle(ref, () => ({
+      zoomIn: () => zoomBy(1.2),
+      zoomOut: () => zoomBy(1 / 1.2),
+      resetView,
+    }));
+
+    useEffect(() => {
+      onZoomChange?.(zoom);
+    }, [zoom, onZoomChange]);
+
+    const getFitZoom = useCallback(() => {
+      if (!viewportRef.current) return 0.4;
+      const vw = viewportRef.current.clientWidth;
     if (vw === 0) return 0.4;
     return Math.min(1.0, Math.max(0.15, (vw - 48) / WORLD_W));
   }, []);
@@ -163,11 +175,132 @@ export function BracketCanvas({ router, matches = [] }: BracketCanvasProps) {
 
   const handleDoubleClick = () => resetView();
 
-  const r32 = matches.filter(m => m.group === "r32");
-  const r16 = matches.filter(m => m.group === "r16");
-  const qf = matches.filter(m => m.group === "qf");
-  const sf = matches.filter(m => m.group === "sf");
-  const finals = matches.filter(m => m.group === "final" || m.group === "3rd");
+  const r32Order = [
+    "rsa_v_can", "ned_v_mar", "ger_v_par", "fra_v_swe",
+    "bra_v_jpn", "civ_v_nor", "mex_v_ecu", "eng_v_cod",
+    "por_v_cro", "esp_v_aut", "usa_v_bih", "bel_v_sen",
+    "arg_v_cpv", "aus_v_egy", "sui_v_alg", "col_v_gha"
+  ];
+
+  const r16Order = [
+    "can_v_mar", "par_v_fra", "bra_v_nor", "mex_v_eng",
+    "por_v_esp", "usa_v_bel", "arg_v_egy", "sui_v_col"
+  ];
+
+  const qfOrder = [
+    "fra_v_mar",
+    "match_91_v_winner_match_92",
+    "match_93_v_winner_match_94",
+    "match_95_v_winner_match_96"
+  ];
+
+  const sfOrder = [
+    "match_97_v_winner_match_98",
+    "match_99_v_winner_match_100"
+  ];
+
+  const finalsOrder = [
+    "winner_match_101_v_winner_match_102",
+    "loser_match_101_v_loser_match_102"
+  ];
+
+  const sortKnockoutMatches = (matchesList: Match[], order: string[]) => {
+    return [...matchesList].sort((a, b) => {
+      const aId = a.id.toLowerCase();
+      const bId = b.id.toLowerCase();
+      
+      const aIdx = order.findIndex(pattern => aId.includes(pattern));
+      const bIdx = order.findIndex(pattern => bId.includes(pattern));
+      
+      if (aIdx === -1 && bIdx === -1) return 0;
+      if (aIdx === -1) return 1;
+      if (bIdx === -1) return -1;
+      return aIdx - bIdx;
+    });
+  };
+
+  const r32 = sortKnockoutMatches(matches.filter(m => m.group === "r32"), r32Order);
+  const r16Raw = sortKnockoutMatches(matches.filter(m => m.group === "r16"), r16Order);
+  const qfRaw = sortKnockoutMatches(matches.filter(m => m.group === "qf"), qfOrder);
+  const sfRaw = sortKnockoutMatches(matches.filter(m => m.group === "sf"), sfOrder);
+  const finalsRaw = sortKnockoutMatches(matches.filter(m => m.group === "final" || m.group === "3rd"), finalsOrder);
+
+  const getWinnerCode = (match: Match | undefined): string | null => {
+    if (!match) return null;
+    if (match.homeScore === undefined || match.homeScore === null || match.awayScore === undefined || match.awayScore === null) return null;
+    if (match.homeScore > match.awayScore) return match.homeTeam.code;
+    if (match.awayScore > match.homeScore) return match.awayTeam.code;
+    if (match.homePenaltyScore !== undefined && match.awayPenaltyScore !== undefined) {
+      if (match.homePenaltyScore > match.awayPenaltyScore) return match.homeTeam.code;
+      if (match.awayPenaltyScore > match.homePenaltyScore) return match.awayTeam.code;
+    }
+    return null;
+  };
+
+  const getLoserCode = (match: Match | undefined): string | null => {
+    if (!match) return null;
+    const winner = getWinnerCode(match);
+    if (!winner) return null;
+    return match.homeTeam.code === winner ? match.awayTeam.code : match.homeTeam.code;
+  };
+
+  const swapRawMatch = (m: Match): Match => {
+    return {
+      ...m,
+      homeTeam: m.awayTeam,
+      awayTeam: m.homeTeam,
+      homeScore: m.awayScore,
+      awayScore: m.homeScore,
+      homePenaltyScore: m.awayPenaltyScore,
+      awayPenaltyScore: m.homePenaltyScore,
+    };
+  };
+
+  const alignStageMatches = (currentStage: Match[], parentStage: Match[]) => {
+    return currentStage.map((match, idx) => {
+      const parent1 = parentStage[2 * idx];
+      const parent2 = parentStage[2 * idx + 1];
+      if (!parent1 || !parent2) return match;
+      
+      const expectedHome = getWinnerCode(parent1);
+      const expectedAway = getWinnerCode(parent2);
+      
+      if (!expectedHome && !expectedAway) return match;
+      
+      if (
+        (expectedAway && match.homeTeam.code === expectedAway) || 
+        (expectedHome && match.awayTeam.code === expectedHome)
+      ) {
+        return swapRawMatch(match);
+      }
+      return match;
+    });
+  };
+
+  const r16 = alignStageMatches(r16Raw, r32);
+  const qf = alignStageMatches(qfRaw, r16);
+  const sf = alignStageMatches(sfRaw, qf);
+  
+  const sf1 = sf[0];
+  const sf2 = sf[1];
+  const finals = finalsRaw.map((match) => {
+    if (match.group === "3rd") {
+      const expectedHome = getLoserCode(sf1);
+      const expectedAway = getLoserCode(sf2);
+      if ((expectedAway && match.homeTeam.code === expectedAway) || (expectedHome && match.awayTeam.code === expectedHome)) {
+        return swapRawMatch(match);
+      }
+    } else {
+      const expectedHome = getWinnerCode(sf1);
+      const expectedAway = getWinnerCode(sf2);
+      if ((expectedAway && match.homeTeam.code === expectedAway) || (expectedHome && match.awayTeam.code === expectedHome)) {
+        return swapRawMatch(match);
+      }
+    }
+    return match;
+  });
+
+
 
   const buildMatches = (sourceMatches: Match[]) => {
     return sourceMatches.map((m) => {
@@ -381,12 +514,12 @@ export function BracketCanvas({ router, matches = [] }: BracketCanvasProps) {
 
                     const matchStatus        = item.score ? "Full time" : "Upcoming";
                     const hasWinner          = !!item.winner;
-                    const lineHighlightClass = hasWinner ? "bg-emerald-500/80" : "bg-slate-700/60";
-                    const lineHoverClass     = `group-hover:bg-emerald-400/90 ${lineHighlightClass} transition-colors duration-300`;
+                    const lineHighlightClass = "bg-slate-800/60";
+                    const lineHoverClass     = `group-hover:bg-slate-700/80 ${lineHighlightClass} transition-colors duration-300`;
 
                     // Calculate connector line vertical height for this column
                     const getVH = () => {
-                      if (colIdx === 3 || colIdx === 5) return 1120 / 4;
+                      if (colIdx === 3 || colIdx === 5) return 0; // Perfectly straight horizontal alignment
                       return 1120 / (N * 2);
                     };
                     const vH = getVH();
@@ -404,18 +537,55 @@ export function BracketCanvas({ router, matches = [] }: BracketCanvasProps) {
                     const isPathWon = pathStatus === 'won';
                     const isPathLost = pathStatus === 'lost';
                     const isDimmed = !!hoveredTeam && !isInPath;
+                    let homeBorderClass = cardBorderClass;
+                    let awayBorderClass = cardBorderClass;
+                    let homeBgClass     = cardBgClass;
+                    let awayBgClass     = cardBgClass;
 
-                    // Override card styling for path highlighting
-                    if (isPathWon) {
-                      cardBorderClass = "border-emerald-500/70 shadow-[0_0_20px_rgba(16,185,129,0.3)]";
-                      cardBgClass = "bg-[#0d1f1a]";
-                    } else if (isPathLost) {
-                      cardBorderClass = "border-red-500/60 shadow-[0_0_20px_rgba(239,68,68,0.3)]";
-                      cardBgClass = "bg-[#1f0f0f]";
+                    // Override card styling for path highlighting (outline only)
+                    if (isInPath) {
+                      if (isPathWon) {
+                        if (item.home === hoveredTeam) {
+                          homeBorderClass = "border-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.25)]";
+                        } else if (item.away === hoveredTeam) {
+                          awayBorderClass = "border-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.25)]";
+                        }
+                      } else if (isPathLost) {
+                        if (item.home === hoveredTeam) {
+                          homeBorderClass = "border-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.25)]";
+                        } else if (item.away === hoveredTeam) {
+                          awayBorderClass = "border-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.25)]";
+                        }
+                      } else {
+                        // upcoming
+                        if (item.home === hoveredTeam) {
+                          homeBorderClass = "border-cyan-500/60 shadow-[0_0_8px_rgba(6,182,212,0.15)]";
+                        } else if (item.away === hoveredTeam) {
+                          awayBorderClass = "border-cyan-500/60 shadow-[0_0_8px_rgba(6,182,212,0.15)]";
+                        }
+                      }
                     }
 
+                    const getHomeNameColor = () => {
+                      if (hoveredTeam && item.home === hoveredTeam && isInPath) {
+                        if (isPathWon) return "text-emerald-400 font-extrabold";
+                        if (isPathLost) return "text-rose-400 font-extrabold";
+                        return "text-cyan-400 font-extrabold";
+                      }
+                      return isHomeWinner ? "text-white" : "text-slate-300";
+                    };
+
+                    const getAwayNameColor = () => {
+                      if (hoveredTeam && item.away === hoveredTeam && isInPath) {
+                        if (isPathWon) return "text-emerald-400 font-extrabold";
+                        if (isPathLost) return "text-rose-400 font-extrabold";
+                        return "text-cyan-400 font-extrabold";
+                      }
+                      return isAwayWinner ? "text-white" : "text-slate-300";
+                    };
+
                     // Connector class for outgoing horizontal + vertical from this match
-                    const pathGlow = "bg-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.5)]";
+                    const pathGlow = "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]";
                     const pathDim  = "bg-slate-800/20";
                     const myConnectorClass = isConnectorInPath(colIdx, idx)
                       ? pathGlow
@@ -431,8 +601,8 @@ export function BracketCanvas({ router, matches = [] }: BracketCanvasProps) {
 
                     const cardInner = (
                       <div
-                        onClick={() => item.matchId && router.push(`/matches/${item.matchId}`)}
                         className="flex-1 flex flex-col cursor-pointer group"
+                        onClick={() => item.matchId && router.push(`/matches/${item.matchId}`)}
                       >
                         <div className="px-1 flex justify-between items-center text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1.5">
                           <span className={isFinalMatch ? "text-amber-400 font-extrabold" : isThirdPlaceMatch ? "text-cyan-400 font-extrabold" : "text-emerald-400"}>
@@ -442,7 +612,11 @@ export function BracketCanvas({ router, matches = [] }: BracketCanvasProps) {
                         </div>
 
                         {/* Home team */}
-                        <div className={`flex justify-between items-center px-3.5 py-2.5 ${cardBgClass} border ${cardBorderClass} rounded-2xl shadow-sm transition-all duration-300`}>
+                        <div 
+                          className={`flex justify-between items-center px-3.5 py-2.5 ${homeBgClass} border ${homeBorderClass} rounded-2xl shadow-sm transition-all duration-300 ${item.home !== "TBD" ? "cursor-pointer" : ""}`}
+                          onMouseEnter={() => item.home !== "TBD" && setHoveredTeam(item.home)}
+                          onMouseLeave={() => setHoveredTeam(null)}
+                        >
                           <div className="flex items-center space-x-2.5">
                             <span className="w-5 h-5 rounded bg-slate-900 border border-slate-800/80 flex items-center justify-center text-[9px] font-black text-slate-400">{item.homeSeed || ""}</span>
                             <div className="w-6 h-4 relative overflow-hidden rounded-sm shadow-sm shrink-0 flex items-center justify-center text-xs">
@@ -453,9 +627,7 @@ export function BracketCanvas({ router, matches = [] }: BracketCanvasProps) {
                               )}
                             </div>
                             <span
-                              className={`font-bold uppercase tracking-widest text-[13px] ${isHomeWinner ? "text-white" : "text-slate-300"} ${item.home !== "TBD" ? "cursor-pointer hover:text-emerald-400 transition-colors duration-200" : ""}`}
-                              onMouseEnter={() => item.home !== "TBD" && setHoveredTeam(item.home)}
-                              onMouseLeave={() => setHoveredTeam(null)}
+                              className={`font-bold uppercase tracking-widest text-[13px] transition-colors duration-200 ${getHomeNameColor()}`}
                             >
                               {item.home}
                             </span>
@@ -470,7 +642,11 @@ export function BracketCanvas({ router, matches = [] }: BracketCanvasProps) {
                         <div className="h-1.5" />
 
                         {/* Away team */}
-                        <div className={`flex justify-between items-center px-3.5 py-2.5 ${cardBgClass} border ${cardBorderClass} rounded-2xl shadow-sm transition-all duration-300`}>
+                        <div 
+                          className={`flex justify-between items-center px-3.5 py-2.5 ${awayBgClass} border ${awayBorderClass} rounded-2xl shadow-sm transition-all duration-300 ${item.away !== "TBD" ? "cursor-pointer" : ""}`}
+                          onMouseEnter={() => item.away !== "TBD" && setHoveredTeam(item.away)}
+                          onMouseLeave={() => setHoveredTeam(null)}
+                        >
                           <div className="flex items-center space-x-2.5">
                             <span className="w-5 h-5 rounded bg-slate-900 border border-slate-800/80 flex items-center justify-center text-[9px] font-black text-slate-400">{item.awaySeed || ""}</span>
                             <div className="w-6 h-4 relative overflow-hidden rounded-sm shadow-sm shrink-0 flex items-center justify-center text-xs">
@@ -481,9 +657,7 @@ export function BracketCanvas({ router, matches = [] }: BracketCanvasProps) {
                               )}
                             </div>
                             <span
-                              className={`font-bold uppercase tracking-widest text-[13px] ${isAwayWinner ? "text-white" : "text-slate-300"} ${item.away !== "TBD" ? "cursor-pointer hover:text-emerald-400 transition-colors duration-200" : ""}`}
-                              onMouseEnter={() => item.away !== "TBD" && setHoveredTeam(item.away)}
-                              onMouseLeave={() => setHoveredTeam(null)}
+                              className={`font-bold uppercase tracking-widest text-[13px] transition-colors duration-200 ${getAwayNameColor()}`}
                             >
                               {item.away}
                             </span>
@@ -566,6 +740,52 @@ export function BracketCanvas({ router, matches = [] }: BracketCanvasProps) {
                         )}
                       </div>
                     );
+                    if (colIdx === 4) {
+                      if (idx === 0) {
+                        return (
+                          <div 
+                            key={idx} 
+                            className={`absolute w-full px-2 transition-opacity duration-300 ${isDimmed ? "opacity-25" : "opacity-100"}`} 
+                            style={{ 
+                              top: "350px", 
+                              left: 0, 
+                              right: 0, 
+                              display: "flex", 
+                              flexDirection: "column", 
+                              alignItems: "center" 
+                            }}
+                          >
+                            {/* World Cup Trophy/Logo Image */}
+                            <div className="mb-6 flex flex-col items-center select-none">
+                              <img 
+                                src="/tournaments_fifa-world-cup-2026.football-logos.cc.svg" 
+                                alt="FIFA World Cup 2026 Logo" 
+                                className="w-24 h-32 object-contain drop-shadow-[0_0_15px_rgba(245,158,11,0.35)]" 
+                              />
+                            </div>
+                            <div className="w-full">
+                              {cardInner}
+                            </div>
+                          </div>
+                        );
+                      } else {
+                        return (
+                          <div 
+                            key={idx} 
+                            className={`absolute w-full px-2 transition-opacity duration-300 ${isDimmed ? "opacity-25" : "opacity-100"}`} 
+                            style={{ 
+                              top: "730px", 
+                              left: 0, 
+                              right: 0, 
+                              display: "flex", 
+                              alignItems: "center" 
+                            }}
+                          >
+                            {cardInner}
+                          </div>
+                        );
+                      }
+                    }
                     return <div key={idx} className={`w-full px-2 transition-opacity duration-300 ${isDimmed ? "opacity-25" : "opacity-100"}`} style={{ height: `${1120 / N}px`, flexShrink: 0, display: "flex", alignItems: "center" }}>{cardInner}</div>;
                   })}
                 </div>
@@ -588,22 +808,8 @@ export function BracketCanvas({ router, matches = [] }: BracketCanvasProps) {
       className={`w-full h-full overflow-auto select-none ${isDragging ? "cursor-grabbing" : "cursor-grab"}`}
     >
       {bracketWorld}
-      
-      <div className="absolute right-4 top-4 z-20 flex flex-col space-y-2 pointer-events-auto">
-        <button onClick={() => zoomBy(1.2)} className="bg-[#131b2e] border border-slate-800 text-slate-200 rounded-xl p-2.5 hover:bg-slate-800 transition" title="Zoom In">
-          <ZoomIn className="w-4 h-4" />
-        </button>
-        <button onClick={() => zoomBy(1 / 1.2)} className="bg-[#131b2e] border border-slate-800 text-slate-200 rounded-xl p-2.5 hover:bg-slate-800 transition" title="Zoom Out">
-          <ZoomOut className="w-4 h-4" />
-        </button>
-        <button onClick={resetView} className="bg-[#131b2e] border border-slate-800 text-slate-200 rounded-xl p-2.5 hover:bg-slate-800 transition" title="Reset View">
-          <RotateCcw className="w-4 h-4" />
-        </button>
-      </div>
-
-      <div className="absolute left-4 bottom-4 z-20 text-[10px] font-black text-slate-600 select-none tabular-nums">
-        {Math.round(zoom * 100)}%
-      </div>
     </div>
   );
-}
+});
+
+BracketCanvas.displayName = "BracketCanvas";
