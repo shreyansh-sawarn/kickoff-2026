@@ -66,6 +66,14 @@ module.exports = {
         source: '/news',
         destination: '/',
       },
+      {
+        source: '/archive',
+        destination: '/',
+      },
+      {
+        source: '/about',
+        destination: '/',
+      },
     ];
   },
 };
