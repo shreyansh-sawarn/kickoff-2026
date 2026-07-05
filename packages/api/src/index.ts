@@ -189,17 +189,20 @@ export async function getMatches(): Promise<Match[]> {
 
       let mappedGroup = m.group_name;
       if (m.stage === "knockout" || ["r32", "r16", "qf", "sf", "final", "3rd"].includes(m.stage)) {
-        const stageVal = m.stage?.toLowerCase();
-        if (["r32", "r16", "qf", "sf", "final", "3rd"].includes(stageVal)) {
-          mappedGroup = stageVal;
+        const idStr = m.id.toLowerCase();
+        if (idStr.includes("match_103") || idStr.includes("third") || idStr.includes("loser_match_101")) {
+          mappedGroup = "3rd";
         } else {
-          const idStr = m.id.toLowerCase();
-          if (idStr.includes("match_104") || idStr.includes("final") || (idStr.includes("winner_match_101"))) mappedGroup = "final";
-          else if (idStr.includes("match_103") || idStr.includes("third") || idStr.includes("loser_match_101")) mappedGroup = "3rd";
-          else if (idStr.includes("match_101") || idStr.includes("match_102") || idStr.includes("winner_match_97") || idStr.includes("winner_match_98") || idStr.includes("winner_match_99") || idStr.includes("winner_match_100") || idStr.includes("sf")) mappedGroup = "sf";
-          else if (idStr.includes("match_97") || idStr.includes("match_98") || idStr.includes("match_99") || idStr.includes("match_100") || idStr.includes("winner_match_89") || idStr.includes("winner_match_90") || idStr.includes("winner_match_91") || idStr.includes("winner_match_92") || idStr.includes("winner_match_93") || idStr.includes("winner_match_94") || idStr.includes("winner_match_95") || idStr.includes("winner_match_96") || idStr.includes("qf")) mappedGroup = "qf";
-          else if (idStr.includes("match_89") || idStr.includes("match_90") || idStr.includes("match_91") || idStr.includes("match_92") || idStr.includes("match_93") || idStr.includes("match_94") || idStr.includes("match_95") || idStr.includes("match_96") || idStr.includes("winner_match_7") || idStr.includes("winner_match_8") || idStr.includes("r16")) mappedGroup = "r16";
-          else mappedGroup = "r32";
+          const stageVal = m.stage?.toLowerCase();
+          if (["r32", "r16", "qf", "sf", "final", "3rd"].includes(stageVal)) {
+            mappedGroup = stageVal;
+          } else {
+            if (idStr.includes("match_104") || idStr.includes("final") || (idStr.includes("winner_match_101"))) mappedGroup = "final";
+            else if (idStr.includes("match_101") || idStr.includes("match_102") || idStr.includes("winner_match_97") || idStr.includes("winner_match_98") || idStr.includes("winner_match_99") || idStr.includes("winner_match_100") || idStr.includes("sf")) mappedGroup = "sf";
+            else if (idStr.includes("match_97") || idStr.includes("match_98") || idStr.includes("match_99") || idStr.includes("match_100") || idStr.includes("winner_match_89") || idStr.includes("winner_match_90") || idStr.includes("winner_match_91") || idStr.includes("winner_match_92") || idStr.includes("winner_match_93") || idStr.includes("winner_match_94") || idStr.includes("winner_match_95") || idStr.includes("winner_match_96") || idStr.includes("qf")) mappedGroup = "qf";
+            else if (idStr.includes("match_89") || idStr.includes("match_90") || idStr.includes("match_91") || idStr.includes("match_92") || idStr.includes("match_93") || idStr.includes("match_94") || idStr.includes("match_95") || idStr.includes("match_96") || idStr.includes("winner_match_7") || idStr.includes("winner_match_8") || idStr.includes("r16")) mappedGroup = "r16";
+            else mappedGroup = "r32";
+          }
         }
       }
 

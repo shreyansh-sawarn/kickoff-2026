@@ -52,7 +52,11 @@ export function useDashboard() {
     setActiveTabState(tab);
     if (typeof window !== "undefined") {
       const newPath = tab === "dashboard" ? "/" : `/${tab}`;
-      window.history.pushState(null, "", newPath + window.location.search);
+      const params = new URLSearchParams(window.location.search);
+      params.delete("filter");
+      const searchStr = params.toString();
+      const newUrl = searchStr ? `${newPath}?${searchStr}` : newPath;
+      window.history.pushState(null, "", newUrl);
     }
   };
 
