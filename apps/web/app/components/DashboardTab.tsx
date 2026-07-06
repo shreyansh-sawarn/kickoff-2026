@@ -4,6 +4,7 @@ import { getFlagCdnUrl, formatMatchTime, formatMatchDate } from "@wc26/utils";
 import { DashboardFavorites } from "./DashboardFavorites";
 import { DashboardLiveCarousel, DashboardNewsCarousel } from "./DashboardLiveCarousel";
 import { DashboardStandingsSummary } from "./DashboardStandingsSummary";
+import { FlagOrShield } from "./FlagOrShield";
 
 interface DashboardTabProps {
   starredMatches: Match[];
@@ -69,9 +70,7 @@ export default function DashboardTab({
                 className="bg-[#131b2e] border border-slate-800/60 rounded-xl p-4 flex items-center justify-between hover:border-slate-700/60 transition-all duration-300 cursor-pointer"
               >
                 <div className="flex items-center space-x-4 flex-1">
-                  <div className="w-8 h-5 relative overflow-hidden rounded shadow-sm shrink-0">
-                    <img src={getFlagCdnUrl(match.homeTeam.code)} alt="" className="w-full h-full object-cover" />
-                  </div>
+                  <FlagOrShield code={match.homeTeam.code} className="w-8 h-5 shrink-0" imgClassName="object-cover" />
                   <span className="font-semibold text-sm text-slate-200 hidden sm:inline-block w-28 line-clamp-1">{match.homeTeam.name}</span>
                   <span className="font-bold text-xs text-slate-200 sm:hidden">{match.homeTeam.code}</span>
                   
@@ -79,9 +78,7 @@ export default function DashboardTab({
                   
                   <span className="font-semibold text-sm text-slate-200 hidden sm:inline-block w-28 line-clamp-1 text-right">{match.awayTeam.name}</span>
                   <span className="font-bold text-xs text-slate-200 sm:hidden text-right">{match.awayTeam.code}</span>
-                  <div className="w-8 h-5 relative overflow-hidden rounded shadow-sm shrink-0">
-                    <img src={getFlagCdnUrl(match.awayTeam.code)} alt="" className="w-full h-full object-cover" />
-                  </div>
+                  <FlagOrShield code={match.awayTeam.code} className="w-8 h-5 shrink-0" imgClassName="object-cover" />
                 </div>
 
                 <div className="text-right pl-4 border-l border-slate-800/80 flex flex-col justify-center">

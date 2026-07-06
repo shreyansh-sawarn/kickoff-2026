@@ -175,55 +175,167 @@ export const BracketCanvas = forwardRef<any, BracketCanvasProps>(
 
   const handleDoubleClick = () => resetView();
 
-  const r32Order = [
-    "rsa_v_can", "ned_v_mar", "ger_v_par", "fra_v_swe",
-    "bra_v_jpn", "civ_v_nor", "mex_v_ecu", "eng_v_cod",
-    "por_v_cro", "esp_v_aut", "usa_v_bih", "bel_v_sen",
-    "arg_v_cpv", "aus_v_egy", "sui_v_alg", "col_v_gha"
-  ];
+   const r32Order = [
+     "rsa_v_can", "ned_v_mar", "ger_v_par", "fra_v_swe",
+     "por_v_cro", "esp_v_aut", "usa_v_bih", "bel_v_sen",
+     "bra_v_jpn", "civ_v_nor", "mex_v_ecu", "eng_v_cod",
+     "arg_v_cpv", "aus_v_egy", "sui_v_alg", "col_v_gha"
+   ];
 
-  const r16Order = [
-    "can_v_mar", "par_v_fra", "bra_v_nor", "mex_v_eng",
-    "por_v_esp", "usa_v_bel", "arg_v_egy", "sui_v_col"
-  ];
+   const r16Order = [
+     "can_v_mar", "par_v_fra",
+     "por_v_esp", "usa_v_bel",
+     "bra_v_nor", "mex_v_eng",
+     "arg_v_egy", "sui_v_col"
+   ];
 
-  const qfOrder = [
-    "fra_v_mar",
-    "match_91_v_winner_match_92",
-    "match_93_v_winner_match_94",
-    "match_95_v_winner_match_96"
-  ];
+   const qfOrder = [
+     "fra_v_mar",
+     "match_93_v_winner_match_94",
+     "match_91_v_winner_match_92",
+     "match_95_v_winner_match_96"
+   ];
 
-  const sfOrder = [
-    "match_97_v_winner_match_98",
-    "match_99_v_winner_match_100"
-  ];
+   const sfOrder = [
+     "match_97_v_winner_match_98",
+     "match_99_v_winner_match_100"
+   ];
 
-  const finalsOrder = [
-    "winner_match_101_v_winner_match_102",
-    "loser_match_101_v_loser_match_102"
-  ];
+   const finalsOrder = [
+     "winner_match_101_v_winner_match_102",
+     "loser_match_101_v_loser_match_102"
+   ];
 
-  const sortKnockoutMatches = (matchesList: Match[], order: string[]) => {
-    return [...matchesList].sort((a, b) => {
-      const aId = a.id.toLowerCase();
-      const bId = b.id.toLowerCase();
-      
-      const aIdx = order.findIndex(pattern => aId.includes(pattern));
-      const bIdx = order.findIndex(pattern => bId.includes(pattern));
-      
-      if (aIdx === -1 && bIdx === -1) return 0;
-      if (aIdx === -1) return 1;
-      if (bIdx === -1) return -1;
-      return aIdx - bIdx;
-    });
-  };
+   const getR16Index = (match: Match): number => {
+     const id = match.id.toLowerCase();
+     const home = match.homeTeam?.code?.toUpperCase();
+     const away = match.awayTeam?.code?.toUpperCase();
 
-  const r32 = sortKnockoutMatches(matches.filter(m => m.group === "r32"), r32Order);
-  const r16Raw = sortKnockoutMatches(matches.filter(m => m.group === "r16"), r16Order);
-  const qfRaw = sortKnockoutMatches(matches.filter(m => m.group === "qf"), qfOrder);
-  const sfRaw = sortKnockoutMatches(matches.filter(m => m.group === "sf"), sfOrder);
-  const finalsRaw = sortKnockoutMatches(matches.filter(m => m.group === "final" || m.group === "3rd"), finalsOrder);
+     if (id.includes("can_v_mar") || id.includes("89")) return 0;
+     if (id.includes("par_v_fra") || id.includes("90")) return 1;
+     if (id.includes("por_v_esp") || id.includes("93")) return 2;
+     if (id.includes("usa_v_bel") || id.includes("94")) return 3;
+     if (id.includes("bra_v_nor") || id.includes("91")) return 4;
+     if (id.includes("mex_v_eng") || id.includes("92")) return 5;
+     if (id.includes("arg_v_egy") || id.includes("95")) return 6;
+     if (id.includes("sui_v_col") || id.includes("96")) return 7;
+
+     const t0 = ["RSA", "CAN", "NED", "MAR"];
+     const t1 = ["GER", "PAR", "FRA", "SWE"];
+     const t2 = ["POR", "CRO", "ESP", "AUT"];
+     const t3 = ["USA", "BIH", "BEL", "SEN"];
+     const t4 = ["BRA", "JPN", "CIV", "NOR"];
+     const t5 = ["MEX", "ECU", "ENG", "COD"];
+     const t6 = ["ARG", "CPV", "AUS", "EGY"];
+     const t7 = ["SUI", "ALG", "COL", "GHA"];
+
+     if ((home && t0.includes(home)) || (away && t0.includes(away))) return 0;
+     if ((home && t1.includes(home)) || (away && t1.includes(away))) return 1;
+     if ((home && t2.includes(home)) || (away && t2.includes(away))) return 2;
+     if ((home && t3.includes(home)) || (away && t3.includes(away))) return 3;
+     if ((home && t4.includes(home)) || (away && t4.includes(away))) return 4;
+     if ((home && t5.includes(home)) || (away && t5.includes(away))) return 5;
+     if ((home && t6.includes(home)) || (away && t6.includes(away))) return 6;
+     if ((home && t7.includes(home)) || (away && t7.includes(away))) return 7;
+
+     return -1;
+   };
+
+   const getQFIndex = (match: Match): number => {
+     const id = match.id.toLowerCase();
+     const home = match.homeTeam?.code?.toUpperCase();
+     const away = match.awayTeam?.code?.toUpperCase();
+
+     if (id.includes("89") || id.includes("90") || id.includes("fra_v_mar")) return 0;
+     if (id.includes("93") || id.includes("94")) return 1;
+     if (id.includes("91") || id.includes("92") || id.includes("nor_v_eng")) return 2;
+     if (id.includes("95") || id.includes("96")) return 3;
+
+     const branch1Teams = ["RSA", "CAN", "NED", "MAR", "GER", "PAR", "FRA", "SWE"];
+     const branch3Teams = ["POR", "CRO", "ESP", "AUT", "USA", "BIH", "BEL", "SEN"];
+     const branch2Teams = ["BRA", "JPN", "CIV", "NOR", "MEX", "ECU", "ENG", "COD"];
+     const branch4Teams = ["ARG", "CPV", "AUS", "EGY", "SUI", "ALG", "COL", "GHA"];
+
+     if ((home && branch1Teams.includes(home)) || (away && branch1Teams.includes(away))) return 0;
+     if ((home && branch3Teams.includes(home)) || (away && branch3Teams.includes(away))) return 1;
+     if ((home && branch2Teams.includes(home)) || (away && branch2Teams.includes(away))) return 2;
+     if ((home && branch4Teams.includes(home)) || (away && branch4Teams.includes(away))) return 3;
+
+     return -1;
+   };
+
+   const getSFIndex = (match: Match): number => {
+     const id = match.id.toLowerCase();
+     const home = match.homeTeam?.code?.toUpperCase();
+     const away = match.awayTeam?.code?.toUpperCase();
+
+     if (id.includes("97") || id.includes("98") || id.includes("sf1")) return 0;
+     if (id.includes("99") || id.includes("100") || id.includes("sf2")) return 1;
+
+     const branch1And3Teams = [
+       "RSA", "CAN", "NED", "MAR", "GER", "PAR", "FRA", "SWE",
+       "POR", "CRO", "ESP", "AUT", "USA", "BIH", "BEL", "SEN"
+     ];
+     const branch2And4Teams = [
+       "BRA", "JPN", "CIV", "NOR", "MEX", "ECU", "ENG", "COD",
+       "ARG", "CPV", "AUS", "EGY", "SUI", "ALG", "COL", "GHA"
+     ];
+
+     if ((home && branch1And3Teams.includes(home)) || (away && branch1And3Teams.includes(away))) return 0;
+     if ((home && branch2And4Teams.includes(home)) || (away && branch2And4Teams.includes(away))) return 1;
+
+     return -1;
+   };
+
+   const sortKnockoutMatches = (matchesList: Match[], order: string[]) => {
+     return [...matchesList].sort((a, b) => {
+       const aId = a.id.toLowerCase();
+       const bId = b.id.toLowerCase();
+       
+       const aIdx = order.findIndex(pattern => aId.includes(pattern));
+       const bIdx = order.findIndex(pattern => bId.includes(pattern));
+       
+       if (aIdx === -1 && bIdx === -1) return 0;
+       if (aIdx === -1) return 1;
+       if (bIdx === -1) return -1;
+       return aIdx - bIdx;
+     });
+   };
+
+   const r32 = sortKnockoutMatches(matches.filter(m => m.group === "r32"), r32Order);
+
+   const r16Raw = [...matches.filter(m => m.group === "r16")].sort((a, b) => {
+     const aIdx = getR16Index(a);
+     const bIdx = getR16Index(b);
+     if (aIdx === -1 && bIdx === -1) return 0;
+     if (aIdx === -1) return 1;
+     if (bIdx === -1) return -1;
+     return aIdx - bIdx;
+   });
+
+   const qfRaw = [...matches.filter(m => m.group === "qf")].sort((a, b) => {
+     const aIdx = getQFIndex(a);
+     const bIdx = getQFIndex(b);
+     if (aIdx === -1 && bIdx === -1) return 0;
+     if (aIdx === -1) return 1;
+     if (bIdx === -1) return -1;
+     return aIdx - bIdx;
+   });
+
+   const sfRaw = [...matches.filter(m => m.group === "sf")].sort((a, b) => {
+     const aIdx = getSFIndex(a);
+     const bIdx = getSFIndex(b);
+     if (aIdx === -1 && bIdx === -1) return 0;
+     if (aIdx === -1) return 1;
+     if (bIdx === -1) return -1;
+     return aIdx - bIdx;
+   });
+
+   const finalsRaw = [...matches.filter(m => m.group === "final" || m.group === "3rd")].sort((a, b) => {
+     if (a.group === "final" && b.group === "3rd") return -1;
+     if (a.group === "3rd" && b.group === "final") return 1;
+     return 0;
+   });
 
   const getWinnerCode = (match: Match | undefined): string | null => {
     if (!match) return null;
@@ -602,7 +714,7 @@ export const BracketCanvas = forwardRef<any, BracketCanvasProps>(
                     const cardInner = (
                       <div
                         className="flex-1 flex flex-col cursor-pointer group"
-                        onClick={() => item.matchId && router.push(`/matches/${item.matchId}`)}
+                        onClick={() => item.id && !item.id.startsWith("pad-") && router.push(`/matches/${item.id}?from=knockout`)}
                       >
                         <div className="px-1 flex justify-between items-center text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1.5">
                           <span className={isFinalMatch ? "text-amber-400 font-extrabold" : isThirdPlaceMatch ? "text-cyan-400 font-extrabold" : "text-emerald-400"}>
