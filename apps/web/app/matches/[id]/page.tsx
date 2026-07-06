@@ -7,6 +7,7 @@ import { Match } from "@wc26/types";
 import { getCountryFlag, formatFullMatchDateTime, getFlagCdnUrl } from "@wc26/utils";
 import { ArrowLeft, Clock, MapPin, Award, Users, AlignLeft, RefreshCw, Check, X } from "lucide-react";
 import PitchLineup from "../../components/PitchLineup";
+import { FlagOrShield } from "../../components/FlagOrShield";
 
 export default function MatchDetails() {
   const params = useParams();
@@ -16,6 +17,14 @@ export default function MatchDetails() {
   const [match, setMatch] = useState<Match | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeSubTab, setActiveSubTab] = useState<"lineup" | "stats" | "events" | "shootout">("lineup");
+  const [fromSource, setFromSource] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      setFromSource(params.get("from"));
+    }
+  }, []);
 
   const getJerseyNumber = (playerName: string, isHome: boolean) => {
     if (!match?.lineups) return "";
@@ -275,11 +284,19 @@ export default function MatchDetails() {
       <div className="border-b border-slate-800/80 bg-[#0b0f19]/80 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
           <button 
-            onClick={() => router.push(match.status === "completed" ? "/matches?filter=finished" : "/matches?filter=upcoming")}
+            onClick={() => {
+              if (fromSource === "knockout") {
+                router.push("/knockout");
+              } else if (fromSource === "archive") {
+                router.push("/archive");
+              } else {
+                router.push(match.status === "completed" ? "/matches?filter=finished" : "/matches?filter=upcoming");
+              }
+            }}
             className="flex items-center space-x-2 text-slate-450 hover:text-emerald-400 font-bold transition text-sm"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span>Matches</span>
+            <span>{fromSource === "knockout" ? "Knockout" : fromSource === "archive" ? "Archive" : "Matches"}</span>
           </button>
           <span className="text-xs font-bold uppercase tracking-widest text-slate-400">
             {match.group === "final"
@@ -312,9 +329,11 @@ export default function MatchDetails() {
           <div className="flex items-center justify-between w-full max-w-2xl my-4">
             {/* Home Team */}
             <div className="flex flex-col items-center w-1/3">
-              <div className="w-24 h-16 relative overflow-hidden rounded-xl shadow-lg mb-3 shrink-0">
-                <img src={getFlagCdnUrl(match.homeTeam.code)} alt="" className="w-full h-full object-cover" />
-              </div>
+              <FlagOrShield 
+                code={match.homeTeam.code} 
+                className="w-24 h-16 rounded-xl shadow-lg mb-3 shrink-0" 
+                imgClassName="object-cover" 
+              />
               <span className="font-extrabold text-lg text-white text-center">{match.homeTeam.name}</span>
               <span className="text-xs text-slate-500 uppercase font-bold tracking-widest mt-1">{match.homeTeam.code}</span>
             </div>
@@ -355,9 +374,11 @@ export default function MatchDetails() {
 
             {/* Away Team */}
             <div className="flex flex-col items-center w-1/3">
-              <div className="w-24 h-16 relative overflow-hidden rounded-xl shadow-lg mb-3 shrink-0">
-                <img src={getFlagCdnUrl(match.awayTeam.code)} alt="" className="w-full h-full object-cover" />
-              </div>
+              <FlagOrShield 
+                code={match.awayTeam.code} 
+                className="w-24 h-16 rounded-xl shadow-lg mb-3 shrink-0" 
+                imgClassName="object-cover" 
+              />
               <span className="font-extrabold text-lg text-white text-center">{match.awayTeam.name}</span>
               <span className="text-xs text-slate-500 uppercase font-bold tracking-widest mt-1">{match.awayTeam.code}</span>
             </div>
@@ -780,7 +801,11 @@ export default function MatchDetails() {
                     {/* Header */}
                     <div className="flex items-center justify-between border-b border-slate-850 pb-4 mb-4">
                       <div className="flex items-center space-x-3 w-1/3">
-                        <img src={getFlagCdnUrl(match.homeTeam.code)} alt="" className="w-8 h-5 object-cover rounded shadow" />
+                        <FlagOrShield 
+                          code={match.homeTeam.code} 
+                          className="w-8 h-5 rounded shadow shrink-0" 
+                          imgClassName="object-cover" 
+                        />
                         <span className="font-bold text-slate-200 text-sm">{match.homeTeam.code}</span>
                       </div>
                       <div className="flex flex-col items-center text-center w-1/3">
@@ -789,7 +814,11 @@ export default function MatchDetails() {
                       </div>
                       <div className="flex items-center justify-end space-x-3 w-1/3">
                         <span className="font-bold text-slate-200 text-sm">{match.awayTeam.code}</span>
-                        <img src={getFlagCdnUrl(match.awayTeam.code)} alt="" className="w-8 h-5 object-cover rounded shadow" />
+                        <FlagOrShield 
+                          code={match.awayTeam.code} 
+                          className="w-8 h-5 rounded shadow shrink-0" 
+                          imgClassName="object-cover" 
+                        />
                       </div>
                     </div>
 

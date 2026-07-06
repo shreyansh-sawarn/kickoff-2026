@@ -207,3 +207,20 @@ export function calculateMatchPredictionPoints(
   // 3. No match
   return 0;
 }
+
+// Format group or round identifier into standard user-facing uppercase names (e.g. R16, QF, Group A)
+export function formatGroupOrRound(group: string): string {
+  if (!group) return "";
+  const g = group.toLowerCase().trim();
+  if (g === "r32") return "R32";
+  if (g === "r16") return "R16";
+  if (g === "qf") return "QF";
+  if (g === "sf") return "SF";
+  if (g === "3rd") return "3rd Place";
+  if (g === "final") return "2026 FIFA World Cup Final";
+  if (g.startsWith("group")) {
+    return group.charAt(0).toUpperCase() + group.slice(1);
+  }
+  return group;
+}
+

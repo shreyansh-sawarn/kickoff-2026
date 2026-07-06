@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Match } from "@wc26/types";
-import { getFlagCdnUrl } from "@wc26/utils";
+import { getFlagCdnUrl, formatGroupOrRound } from "@wc26/utils";
 import { getNews } from "@wc26/api";
+import { FlagOrShield } from "./FlagOrShield";
 
 interface DashboardLiveCarouselProps {
   liveMatches: Match[];
@@ -44,14 +45,12 @@ export function DashboardLiveCarousel({
                 </div>
                 
                 <div className="p-6 flex flex-col justify-between h-full">
-                  <div className="text-xs text-slate-400 mb-4 font-semibold">{match.group} • {match.stadium}</div>
+                  <div className="text-xs text-slate-400 mb-4 font-semibold">{formatGroupOrRound(match.group)} • {match.stadium}</div>
                   
                   <div className="flex items-center justify-between my-2">
                     {/* Home Team */}
                     <div className="flex flex-col items-center flex-1">
-                      <div className="w-12 h-8 relative overflow-hidden rounded shadow-md mb-1.5">
-                        <img src={getFlagCdnUrl(match.homeTeam.code)} alt="" className="w-full h-full object-cover" />
-                      </div>
+                      <FlagOrShield code={match.homeTeam.code} className="w-12 h-8 mb-1.5 shadow-md" imgClassName="object-cover" />
                       <span className="font-bold text-sm text-white text-center line-clamp-1">{match.homeTeam.name}</span>
                     </div>
                     
@@ -65,9 +64,7 @@ export function DashboardLiveCarousel({
 
                     {/* Away Team */}
                     <div className="flex flex-col items-center flex-1">
-                      <div className="w-12 h-8 relative overflow-hidden rounded shadow-md mb-1.5">
-                        <img src={getFlagCdnUrl(match.awayTeam.code)} alt="" className="w-full h-full object-cover" />
-                      </div>
+                      <FlagOrShield code={match.awayTeam.code} className="w-12 h-8 mb-1.5 shadow-md" imgClassName="object-cover" />
                       <span className="font-bold text-sm text-white text-center line-clamp-1">{match.awayTeam.name}</span>
                     </div>
                   </div>

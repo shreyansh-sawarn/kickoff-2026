@@ -2,6 +2,7 @@ import React from "react";
 import { Sparkles } from "lucide-react";
 import { Match } from "@wc26/types";
 import { getCountryFlag, getFlagCdnUrl } from "@wc26/utils";
+import { FlagOrShield } from "./FlagOrShield";
 
 interface PredictorTabProps {
   upcomingMatches: Match[];
@@ -38,9 +39,7 @@ export default function PredictorTab({
           return (
             <div key={match.id} className="bg-[#131b2e] border border-slate-850 p-5 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4">
               <div className="flex items-center space-x-3 flex-1">
-                <div className="w-8 h-5 relative overflow-hidden rounded shadow-sm shrink-0">
-                  <img src={getFlagCdnUrl(match.homeTeam.code)} alt="" className="w-full h-full object-cover" />
-                </div>
+                <FlagOrShield code={match.homeTeam.code} className="w-8 h-5 shrink-0" imgClassName="object-cover" />
                 <span className="font-bold text-sm text-slate-200 w-28 line-clamp-1">{match.homeTeam.name}</span>
               </div>
 
@@ -65,9 +64,7 @@ export default function PredictorTab({
 
               <div className="flex items-center space-x-3 flex-1 justify-end text-right">
                 <span className="font-bold text-sm text-slate-200 w-28 line-clamp-1">{match.awayTeam.name}</span>
-                <div className="w-8 h-5 relative overflow-hidden rounded shadow-sm shrink-0">
-                  <img src={getFlagCdnUrl(match.awayTeam.code)} alt="" className="w-full h-full object-cover" />
-                </div>
+                <FlagOrShield code={match.awayTeam.code} className="w-8 h-5 shrink-0" imgClassName="object-cover" />
               </div>
             </div>
           );

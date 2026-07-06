@@ -1,26 +1,9 @@
 import React, { useState } from "react";
 import { MapPin } from "lucide-react";
 import { Match } from "@wc26/types";
-import { formatMatchTime, formatMatchDate, getFlagCdnUrl } from "@wc26/utils";
+import { formatMatchTime, formatMatchDate, getFlagCdnUrl, formatGroupOrRound } from "@wc26/utils";
 import { MatchesFilterHeader } from "./MatchesFilterHeader";
-
-/** Renders a country flag, or a shield placeholder for unconfirmed knockout teams */
-const FlagOrShield = ({ code, className = "" }: { code: string; className?: string }) => {
-  if (!code || code === "TBD") {
-    return (
-      <div className={`flex items-center justify-center bg-slate-800/60 border border-slate-700/50 rounded ${className}`}>
-        <svg viewBox="0 0 24 24" fill="none" className="w-4 h-4 text-slate-500" stroke="currentColor" strokeWidth={1.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 2L4 6v6c0 4.418 3.364 8.535 8 9.9C16.636 20.535 20 16.418 20 12V6l-8-4z" />
-        </svg>
-      </div>
-    );
-  }
-  return (
-    <div className={`relative overflow-hidden rounded shadow-sm ${className}`}>
-      <img src={getFlagCdnUrl(code)} alt="" className="w-full h-full object-cover" />
-    </div>
-  );
-};
+import { FlagOrShield } from "./FlagOrShield";
 
 const getKnockoutTag = (match: Match): string | null => {
   const id = match.id.toLowerCase();
@@ -54,22 +37,6 @@ const getKnockoutTag = (match: Match): string | null => {
   
   return null;
 };
-
-const formatGroupOrRound = (group: string): string => {
-  if (!group) return "";
-  const g = group.toLowerCase().trim();
-  if (g === "r32") return "R32";
-  if (g === "r16") return "R16";
-  if (g === "qf") return "QF";
-  if (g === "sf") return "SF";
-  if (g === "3rd") return "3rd Place";
-  if (g === "final") return "2026 FIFA World Cup Final";
-  if (g.startsWith("group")) {
-    return group.charAt(0).toUpperCase() + group.slice(1);
-  }
-  return group;
-};
-
 interface MatchesTabProps {
   matches: Match[];
   liveMatches: Match[];
@@ -115,6 +82,35 @@ export default function MatchesTab({
     }
     return "upcoming";
   });
+
+  const [highlightedId, setHighlightedId] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const matchId = params.get("id");
+    if (matchId) {
+      setHighlightedId(matchId);
+      
+      const targetMatch = matches.find(m => m.id === matchId);
+      if (targetMatch) {
+        if (targetMatch.status === "completed") {
+          setDateFilter("finished");
+          setGroupBy("date");
+        } else {
+          setDateFilter("upcoming");
+          setGroupBy("date");
+        }
+      }
+
+      setTimeout(() => {
+        const element = document.getElementById(`match-row-${matchId}`);
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }, 300);
+    }
+  }, [matches]);
 
   React.useEffect(() => {
     if (typeof window !== "undefined") {
@@ -220,12 +216,18 @@ export default function MatchesTab({
   const renderMatchRow = (match: Match) => {
     const isUpcoming = match.status === "upcoming";
     const isLive = match.status === "live";
+    const isHighlighted = match.id === highlightedId;
 
     return (
       <div
         key={match.id}
+        id={`match-row-${match.id}`}
         onClick={() => router.push(`/matches/${match.id}`)}
-        className="p-4 sm:p-6 flex flex-col sm:flex-row items-center justify-between hover:bg-slate-800/10 transition gap-4 cursor-pointer"
+        className={`p-4 sm:p-6 flex flex-col sm:flex-row items-center justify-between hover:bg-slate-805/10 transition gap-4 cursor-pointer relative rounded-2xl border transition-all duration-300 ${
+          isHighlighted 
+            ? "bg-emerald-500/10 border-emerald-500/60 ring-2 ring-emerald-500/20" 
+            : "border-transparent"
+        }`}
       >
         <div className="flex flex-col text-center sm:text-left sm:w-[30%]">
           <span className="text-xs text-slate-400 font-semibold">{formatGroupOrRound(match.group)}</span>
@@ -349,9 +351,7 @@ export default function MatchesTab({
                   </div>
                   <div className="flex items-center justify-between my-2">
                     <div className="flex items-center space-x-3 w-1/3 min-w-0">
-                      <div className="w-9 h-6 relative overflow-hidden rounded shadow-sm shrink-0">
-                        <img src={getFlagCdnUrl(match.homeTeam.code)} alt="" className="w-full h-full object-cover" />
-                      </div>
+                      <FlagOrShield code={match.homeTeam.code} className="w-9 h-6 shrink-0" imgClassName="object-cover" />
                       <span className="font-bold text-slate-100 truncate w-full text-left">{match.homeTeam.name}</span>
                     </div>
                     <span className="text-2xl font-black text-white px-4 py-2 rounded-xl bg-slate-950/40 border border-slate-850">
@@ -359,9 +359,7 @@ export default function MatchesTab({
                     </span>
                     <div className="flex items-center space-x-3 w-1/3 justify-end text-right min-w-0">
                       <span className="font-bold text-slate-100 truncate w-full text-right">{match.awayTeam.name}</span>
-                      <div className="w-9 h-6 relative overflow-hidden rounded shadow-sm shrink-0">
-                        <img src={getFlagCdnUrl(match.awayTeam.code)} alt="" className="w-full h-full object-cover" />
-                      </div>
+                      <FlagOrShield code={match.awayTeam.code} className="w-9 h-6 shrink-0" imgClassName="object-cover" />
                     </div>
                   </div>
                   <div className="text-[10px] text-slate-500 mt-4 pt-2 border-t border-slate-800 text-center">

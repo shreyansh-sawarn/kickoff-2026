@@ -2007,132 +2007,132 @@ export const teamProfiles = [
         "playing_style": "Hard-working and organized with a counter-attacking focus and strong aerial presence.",
         "key_players": [
             {
-                "name": "Ryan",
+                "name": "Mathew Ryan",
                 "position": "GK" as const,
                 "club": "Levante"
             },
             {
-                "name": "Izzo",
+                "name": "Paul Izzo",
                 "position": "GK" as const,
                 "club": "Randers"
             },
             {
-                "name": "Beach",
+                "name": "Patrick Beach",
                 "position": "GK" as const,
                 "club": "Melbourne City"
             },
             {
-                "name": "Behich",
+                "name": "Aziz Behich",
                 "position": "DEF" as const,
                 "club": "Melbourne City"
             },
             {
-                "name": "Bos",
+                "name": "Jordan Bos",
                 "position": "DEF" as const,
                 "club": "Feynoord"
             },
             {
-                "name": "Burgess",
+                "name": "Cameron Burgess",
                 "position": "DEF" as const,
                 "club": "Swansea City"
             },
             {
-                "name": "Circati",
+                "name": "Alessandro Circati",
                 "position": "DEF" as const,
                 "club": "Parma"
             },
             {
-                "name": "Degenek",
+                "name": "Miloš Degenek",
                 "position": "DEF" as const,
                 "club": "APOEL"
             },
             {
-                "name": "Geria",
+                "name": "Jason Geria",
                 "position": "DEF" as const,
                 "club": "Albirex Niigata"
             },
             {
-                "name": "Herrington",
+                "name": "Lucas Herrington",
                 "position": "DEF" as const,
                 "club": "Colorado Rapids"
             },
             {
-                "name": "Italiano",
+                "name": "Jacob Italiano",
                 "position": "DEF" as const,
                 "club": "Grazer"
             },
             {
-                "name": "Souttar",
+                "name": "Harry Souttar",
                 "position": "DEF" as const,
                 "club": "Leicester City"
             },
             {
-                "name": "Trewin",
+                "name": "Kai Trewin",
                 "position": "DEF" as const,
                 "club": "New York City"
             },
             {
-                "name": "Devlin",
+                "name": "Cameron Devlin",
                 "position": "MID" as const,
                 "club": "Heart of Midlothian"
             },
             {
-                "name": "Hrustic",
+                "name": "Ajdin Hrustic",
                 "position": "MID" as const,
                 "club": "Heracles Almelo"
             },
             {
-                "name": "Irvine",
+                "name": "Jackson Irvine",
                 "position": "MID" as const,
                 "club": "St Pauli"
             },
             {
-                "name": "Metcalfe",
+                "name": "Connor Metcalfe",
                 "position": "MID" as const,
                 "club": "St Pauli"
             },
             {
-                "name": "Okon-Englster",
+                "name": "Paul Okon-Englster",
                 "position": "MID" as const,
                 "club": "Sydney"
             },
             {
-                "name": "O'Neill",
+                "name": "Aiden O'Neill",
                 "position": "MID" as const,
                 "club": "New York City"
             },
             {
-                "name": "Irankunda",
+                "name": "Nestory Irankunda",
                 "position": "FWD" as const,
                 "club": "Watford"
             },
             {
-                "name": "Leckie",
+                "name": "Mathew Leckie",
                 "position": "FWD" as const,
                 "club": "Melbourne City"
             },
             {
-                "name": "Mabil",
+                "name": "Awer Mabil",
                 "position": "FWD" as const,
                 "club": "Castellon"
             },
             {
-                "name": "Toure",
+                "name": "Mohamed Toure",
                 "position": "FWD" as const,
                 "club": "Norwich City"
             },
             {
-                "name": "Velupilly",
+                "name": "Nishan Velupilly",
                 "position": "FWD" as const,
                 "club": "Melbourne City"
             },
             {
-                "name": "Volpato",
+                "name": "Cristian Volpato",
                 "position": "FWD" as const,
                 "club": "Sassuolo"
             },
             {
-                "name": "Yengi",
+                "name": "Kusini Yengi",
                 "position": "FWD" as const,
                 "club": "Livingston/Machida Zelvia"
             }
@@ -2323,11 +2323,6 @@ export const teamProfiles = [
                 "club": "Bayern Munich"
             },
             {
-                "name": "captain)",
-                "position": "DEF" as const,
-                "club": "National Team"
-            },
-            {
                 "name": "David Raum",
                 "position": "DEF" as const,
                 "club": "RB Leipzig"
@@ -2336,11 +2331,6 @@ export const teamProfiles = [
                 "name": "Antonio Rudiger",
                 "position": "DEF" as const,
                 "club": "Real Madrid"
-            },
-            {
-                "name": "vice-captain)",
-                "position": "DEF" as const,
-                "club": "National Team"
             },
             {
                 "name": "Nico Schlotterbeck",
