@@ -14,6 +14,7 @@ import { getMatchById } from "@wc26/api";
 import { Match } from "@wc26/types";
 import { getCountryFlag, formatMatchDate, formatMatchTime } from "@wc26/utils";
 import { StatusBar } from "expo-status-bar";
+import Svg, { Path } from "react-native-svg";
 
 export default function MatchDetailsScreen() {
   const { id } = useLocalSearchParams();
@@ -242,7 +243,7 @@ export default function MatchDetailsScreen() {
           <View style={styles.tabContent}>
             {match.events && match.events.length > 0 ? (
               <View style={styles.eventsCard}>
-                {match.events.filter(e => e.type !== "assist").map((event) => {
+                {match.events.filter(e => (e.type as string) !== "assist").map((event) => {
                   const isHome = event.teamId === match.homeTeam.id;
                   
                   return (
@@ -251,19 +252,34 @@ export default function MatchDetailsScreen() {
                         <Text style={styles.eventTimeText}>{event.minute}'</Text>
                       </View>
                       <View style={styles.eventDetails}>
-                        <Text style={styles.eventPlayerText}>
-                          {event.type === "goal" && "⚽ "}
-                          {event.type === "card_yellow" && "🟨 "}
-                          {event.type === "card_red" && "🟥 "}
-                          {event.type === "substitution" && "🔄 "}
-                          {event.playerOne}
-                        </Text>
+                        <View style={{ flexDirection: "row", alignItems: "center" }}>
+                          {event.type === "penalty_miss" && (
+                            <Svg width={16} height={16} viewBox="0 0 24 24" fill="none" style={{ marginRight: 6 }}>
+                              {/* Goal frame */}
+                              <Path d="M4 20V8H20V20" stroke="#ef4444" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
+                              {/* X */}
+                              <Path d="M9 11L15 17M15 11L9 17" stroke="#ef4444" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
+                            </Svg>
+                          )}
+                          <Text style={styles.eventPlayerText}>
+                            {event.type === "goal" && "⚽ "}
+                            {event.type === "card_yellow" && "🟨 "}
+                            {event.type === "card_red" && "🟥 "}
+                            {event.type === "substitution" && "🔄 "}
+                            {event.playerOne}
+                          </Text>
+                        </View>
                         {event.playerTwo && (
                           <Text style={styles.eventAssistText}>
                             {event.type === "substitution" ? `In: ${event.playerTwo}` : `Assist: ${event.playerTwo}`}
                           </Text>
                         )}
-                        {event.detail && <Text style={styles.eventDetailText}>{event.detail}</Text>}
+                        {event.type === "penalty_miss" && (
+                          <Text style={styles.eventAssistText}>
+                            {event.detail === "saved" ? "Penalty - Goalkeeper save" : "Penalty - Missed"}
+                          </Text>
+                        )}
+                        {event.detail && event.type !== "penalty_miss" && <Text style={styles.eventDetailText}>{event.detail}</Text>}
                       </View>
                     </View>
                   );

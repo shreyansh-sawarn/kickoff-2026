@@ -136,7 +136,9 @@ export async function getMatches(): Promise<Match[]> {
           isShootoutPenalty: extraData.isShootoutPenalty || (type === "shootout_penalty") || false,
           didScore: extraData.didScore !== undefined ? extraData.didScore : (type === "shootout_penalty" ? true : undefined),
           shotNumber: extraData.shotNumber || undefined,
-          clockDisplay: extraData.clockDisplay || undefined
+          clockDisplay: extraData.clockDisplay || undefined,
+          isPenaltyMiss: extraData.isPenaltyMiss || (type === "penalty_miss") || false,
+          detail: extraData.detail || undefined
         };
       });
 
