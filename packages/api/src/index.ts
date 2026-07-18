@@ -192,7 +192,7 @@ export async function getMatches(): Promise<Match[]> {
       let mappedGroup = m.group_name;
       if (m.stage === "knockout" || ["r32", "r16", "qf", "sf", "final", "3rd"].includes(m.stage)) {
         const idStr = m.id.toLowerCase();
-        if (idStr.includes("match_103") || idStr.includes("third") || idStr.includes("loser_match_101")) {
+        if (idStr.includes("match_103") || idStr.includes("third") || idStr.includes("loser_match_101") || (m.stage?.toLowerCase() === "final" && m.venue?.includes("Miami"))) {
           mappedGroup = "3rd";
         } else {
           const stageVal = m.stage?.toLowerCase();
@@ -407,13 +407,22 @@ export async function getPlayers(): Promise<PlayerLeaderboards> {
   let redCards = await fetchList('red-cards', 'red_cards', 'redCards');
   let minutes = await fetchList('minutes', 'minutes', 'minutesPlayed');
 
-  // Derive clean sheets from matches
+  // Derive clean sheets and assist counts from matches
   let cleanSheets: CleanSheetEntry[] = [];
   try {
     const matches = await getMatches();
     const cleanSheetMap = new Map<string, CleanSheetEntry>();
+    const allAssistCounts = new Map<string, number>();
     
     matches.forEach(m => {
+      // count assists
+      m.events?.forEach(e => {
+        if (e.type === "goal" && e.playerTwo) {
+          const key = `${e.playerTwo}-${e.teamId}`.toLowerCase();
+          allAssistCounts.set(key, (allAssistCounts.get(key) || 0) + 1);
+        }
+      });
+
       if (m.status === "completed") {
         if (m.awayScore === 0) {
           // Home team clean sheet
@@ -442,6 +451,12 @@ export async function getPlayers(): Promise<PlayerLeaderboards> {
       }
     });
     cleanSheets = Array.from(cleanSheetMap.values()).sort((a, b) => b.cleanSheets - a.cleanSheets).slice(0, 10);
+
+    // Apply assist counts to goal scorers
+    goals.forEach(g => {
+      const key = `${g.name}-${g.teamId}`.toLowerCase();
+      g.tournamentStats.assists = allAssistCounts.get(key) || 0;
+    });
   } catch(e) {}
 
   return {
