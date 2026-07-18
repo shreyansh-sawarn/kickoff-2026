@@ -149,6 +149,10 @@ export function PlayersTab({ players, t }: PlayersTabProps) {
                  <span className="font-black text-2xl text-white">{players.goals[0].tournamentStats.goals}</span>
                  <span className="text-[10px] text-slate-500 uppercase font-bold block">Goals</span>
                </div>
+               <div className="ml-4 pl-4 border-l border-slate-800 text-center">
+                 <span className="font-black text-2xl text-white">{players.goals[0].tournamentStats.assists}</span>
+                 <span className="text-[10px] text-slate-500 uppercase font-bold block">Assists</span>
+               </div>
             </div>
           ) : (
             <div className="bg-slate-900/50 backdrop-blur-md border border-slate-800 rounded-xl p-4 text-center">
