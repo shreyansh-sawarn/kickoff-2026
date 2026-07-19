@@ -48,7 +48,8 @@ export default function Web() {
     liveMatches,
     upcomingMatches,
     starredMatches,
-    isTournamentOver
+    isTournamentOver,
+    champion
   } = state;
 
   const isFinalLive = liveMatches?.some(m => m.group?.toLowerCase() === 'final');
@@ -105,12 +106,14 @@ export default function Web() {
               isTournamentOver={isTournamentOver}
               countdown={countdown}
               isNextMatchFinal={upcomingMatches?.length > 0 && upcomingMatches[0].group?.toLowerCase() === 'final'}
+              champion={champion}
             />
 
             {/* TAB CONTENTS */}
             {activeTab === "dashboard" && (
               <DashboardTab
                 isTournamentOver={isTournamentOver}
+                champion={champion}
                 starredMatches={starredMatches}
                 liveMatches={liveMatches}
                 upcomingMatches={upcomingMatches}

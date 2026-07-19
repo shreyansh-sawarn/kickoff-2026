@@ -1,0 +1,125 @@
+{
+  "count": 20,
+  "yellow_cards": [
+    {
+      "rank": 1,
+      "player_name": "Issa Diop",
+      "team_code": "MAR",
+      "count": 3
+    },
+    {
+      "rank": 2,
+      "player_name": "Ahmed Fathy",
+      "team_code": "QAT",
+      "count": 2
+    },
+    {
+      "rank": 3,
+      "player_name": "Alan Franco",
+      "team_code": "ECU",
+      "count": 2
+    },
+    {
+      "rank": 4,
+      "player_name": "Amir Al-Ammari",
+      "team_code": "IRQ",
+      "count": 2
+    },
+    {
+      "rank": 5,
+      "player_name": "Bernardo Silva",
+      "team_code": "POR",
+      "count": 2
+    },
+    {
+      "rank": 6,
+      "player_name": "Casemiro",
+      "team_code": "BRA",
+      "count": 2
+    },
+    {
+      "rank": 7,
+      "player_name": "Cristian Romero",
+      "team_code": "ARG",
+      "count": 2
+    },
+    {
+      "rank": 8,
+      "player_name": "Danilo",
+      "team_code": "BRA",
+      "count": 2
+    },
+    {
+      "rank": 9,
+      "player_name": "Declan Rice",
+      "team_code": "ENG",
+      "count": 2
+    },
+    {
+      "rank": 10,
+      "player_name": "Denis Zakaria",
+      "team_code": "SUI",
+      "count": 2
+    },
+    {
+      "rank": 11,
+      "player_name": "Diego Gómez",
+      "team_code": "PAR",
+      "count": 2
+    },
+    {
+      "rank": 12,
+      "player_name": "Gervane Kastaneer",
+      "team_code": "CUW",
+      "count": 2
+    },
+    {
+      "rank": 13,
+      "player_name": "Granit Xhaka",
+      "team_code": "SUI",
+      "count": 2
+    },
+    {
+      "rank": 14,
+      "player_name": "Haissem Hassan",
+      "team_code": "EGY",
+      "count": 2
+    },
+    {
+      "rank": 15,
+      "player_name": "Ivan Perisic",
+      "team_code": "CRO",
+      "count": 2
+    },
+    {
+      "rank": 16,
+      "player_name": "Juninho Bacuna",
+      "team_code": "CUW",
+      "count": 2
+    },
+    {
+      "rank": 17,
+      "player_name": "Leandro Paredes",
+      "team_code": "ARG",
+      "count": 2
+    },
+    {
+      "rank": 18,
+      "player_name": "Lisandro Martínez",
+      "team_code": "ARG",
+      "count": 2
+    },
+    {
+      "rank": 19,
+      "player_name": "Marawan Attia",
+      "team_code": "EGY",
+      "count": 2
+    },
+    {
+      "rank": 20,
+      "player_name": "Matías Galarza",
+      "team_code": "PAR",
+      "count": 2
+    }
+  ]
+}

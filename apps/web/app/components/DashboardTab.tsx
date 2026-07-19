@@ -9,6 +9,7 @@ import { FlagOrShield } from "./FlagOrShield";
 
 interface DashboardTabProps {
   isTournamentOver?: boolean;
+  champion?: any;
   starredMatches: Match[];
   liveMatches: Match[];
   upcomingMatches: Match[];
@@ -22,6 +23,7 @@ interface DashboardTabProps {
 
 export default function DashboardTab({
   isTournamentOver,
+  champion,
   starredMatches,
   liveMatches,
   upcomingMatches,
@@ -76,11 +78,15 @@ export default function DashboardTab({
           <div className="z-10 flex flex-col items-center text-center space-y-6">
             <span className="text-sm font-black uppercase tracking-[0.3em] text-amber-500 drop-shadow-sm">World Champions</span>
             <div className="flex flex-col sm:flex-row items-center sm:space-x-6 space-y-4 sm:space-y-0">
-              <FlagOrShield code="ar" className="w-24 h-16 rounded-xl shadow-lg shrink-0" imgClassName="object-cover" />
-              <div className="flex flex-col sm:items-start items-center">
-                <span className="text-4xl sm:text-5xl font-black text-white uppercase tracking-widest drop-shadow-sm text-center sm:text-left">Argentina</span>
-                <span className="text-slate-400 font-bold uppercase tracking-widest mt-1">🏆 Title Winners</span>
-              </div>
+              {champion && (
+                <>
+                  <FlagOrShield code={champion.code} className="w-24 h-16 rounded-xl shadow-lg shrink-0" imgClassName="object-cover" />
+                  <div className="flex flex-col sm:items-start items-center">
+                    <span className="text-4xl sm:text-5xl font-black text-white uppercase tracking-widest drop-shadow-sm text-center sm:text-left">{champion.name}</span>
+                    <span className="text-slate-400 font-bold uppercase tracking-widest mt-1">🏆 Title Winners</span>
+                  </div>
+                </>
+              )}
             </div>
             
             <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 mt-4 w-full sm:w-auto">

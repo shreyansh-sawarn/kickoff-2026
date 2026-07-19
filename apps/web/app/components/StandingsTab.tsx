@@ -46,56 +46,58 @@ export default function StandingsTab({ standings, t }: StandingsTabProps) {
               <span className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Group Stage</span>
             </div>
             
-            <table className="w-full text-left border-collapse text-xs">
-              <thead>
-                <tr className="bg-slate-900/20 text-slate-400 border-b border-slate-800/40 font-bold">
-                  <th className="py-3 px-5">Pos</th>
-                  <th className="py-3 px-2">Team</th>
-                  <th className="py-3 px-2 text-center font-bold">P</th>
-                  <th className="py-3 px-2 text-center font-bold">W</th>
-                  <th className="py-3 px-2 text-center font-bold">D</th>
-                  <th className="py-3 px-2 text-center font-bold">L</th>
-                  <th className="py-3 px-2 text-center font-bold">GLS</th>
-                  <th className="py-3 px-2 text-center font-bold">GD</th>
-                  <th className="py-3 px-5 text-center font-bold">Pts</th>
-                </tr>
-              </thead>
-              <tbody>
-                {group.standings.map((stat, idx) => {
-                  const isQualified = idx < 2 || (idx === 2 && qualifiedThirdTeamIds.has(stat.teamId));
-                  return (
-                    <tr key={stat.teamId} className="border-b border-slate-800/40 hover:bg-slate-800/10 last:border-0">
-                      <td className="py-3 px-5 font-bold text-slate-350">
-                        <div className="w-6 h-6 flex items-center justify-center">
-                          {isQualified ? (
-                            <span className="text-[9px] font-black text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20" title="Qualified">
-                              Q
-                            </span>
-                          ) : (
-                            <span className="text-slate-400">{idx + 1}</span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="py-3 px-2 font-bold text-white flex items-center space-x-2">
-                        <div className="w-6 h-4 relative overflow-hidden rounded-sm shadow-sm shrink-0">
-                          <img src={getFlagCdnUrl(stat.teamCode)} alt="" className="w-full h-full object-cover" />
-                        </div>
-                        <span className="truncate">{stat.teamName}</span>
-                      </td>
-                      <td className="py-3 px-2 text-center text-slate-300">{stat.played}</td>
-                      <td className="py-3 px-2 text-center text-slate-400">{stat.won}</td>
-                      <td className="py-3 px-2 text-center text-slate-400">{stat.drawn}</td>
-                      <td className="py-3 px-2 text-center text-slate-400">{stat.lost}</td>
-                      <td className="py-3 px-2 text-center text-slate-400">
-                        {stat.goalsFor}
-                      </td>
-                      <td className="py-3 px-2 text-center font-bold text-slate-300">{stat.goalDifference > 0 ? `+${stat.goalDifference}` : stat.goalDifference}</td>
-                      <td className="py-3 px-5 text-center font-black text-emerald-455 text-sm">{stat.points}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr className="bg-slate-900/20 text-slate-400 border-b border-slate-800/40 font-bold">
+                    <th className="py-3 px-5">Pos</th>
+                    <th className="py-3 px-2">Team</th>
+                    <th className="py-3 px-2 text-center font-bold">P</th>
+                    <th className="py-3 px-2 text-center font-bold">W</th>
+                    <th className="py-3 px-2 text-center font-bold">D</th>
+                    <th className="py-3 px-2 text-center font-bold">L</th>
+                    <th className="py-3 px-2 text-center font-bold">GLS</th>
+                    <th className="py-3 px-2 text-center font-bold">GD</th>
+                    <th className="py-3 px-5 text-center font-bold">Pts</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {group.standings.map((stat, idx) => {
+                    const isQualified = idx < 2 || (idx === 2 && qualifiedThirdTeamIds.has(stat.teamId));
+                    return (
+                      <tr key={stat.teamId} className="border-b border-slate-800/40 hover:bg-slate-800/10 last:border-0">
+                        <td className="py-3 px-5 font-bold text-slate-350">
+                          <div className="w-6 h-6 flex items-center justify-center">
+                            {isQualified ? (
+                              <span className="text-[9px] font-black text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20" title="Qualified">
+                                Q
+                              </span>
+                            ) : (
+                              <span className="text-slate-400">{idx + 1}</span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="py-3 px-2 font-bold text-white flex items-center space-x-2">
+                          <div className="w-6 h-4 relative overflow-hidden rounded-sm shadow-sm shrink-0">
+                            <img src={getFlagCdnUrl(stat.teamCode)} alt="" className="w-full h-full object-cover" />
+                          </div>
+                          <span className="truncate">{stat.teamName}</span>
+                        </td>
+                        <td className="py-3 px-2 text-center text-slate-300">{stat.played}</td>
+                        <td className="py-3 px-2 text-center text-slate-400">{stat.won}</td>
+                        <td className="py-3 px-2 text-center text-slate-400">{stat.drawn}</td>
+                        <td className="py-3 px-2 text-center text-slate-400">{stat.lost}</td>
+                        <td className="py-3 px-2 text-center text-slate-400">
+                          {stat.goalsFor}
+                        </td>
+                        <td className="py-3 px-2 text-center font-bold text-slate-300">{stat.goalDifference > 0 ? `+${stat.goalDifference}` : stat.goalDifference}</td>
+                        <td className="py-3 px-5 text-center font-black text-emerald-455 text-sm">{stat.points}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         ))}
       </div>

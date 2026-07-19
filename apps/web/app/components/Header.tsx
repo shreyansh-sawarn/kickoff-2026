@@ -27,8 +27,8 @@ export default function Header({
 }: HeaderProps) {
   return (
     <header className="sticky top-0 z-50 backdrop-blur-md bg-[#0b0f19]/80 border-b border-slate-800/80">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        <div className="flex items-center space-x-3">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 min-h-[4rem] flex flex-wrap sm:flex-nowrap items-center justify-between py-2 sm:py-0">
+        <div className="flex items-center space-x-3 shrink-0">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-amber-400 p-[2px]">
             <div className="w-full h-full bg-[#131b2e] rounded-[10px] flex items-center justify-center font-bold text-lg text-emerald-400">
               <img src="/logo.png" alt="FIFA 2026 World Cup" className="w-7 h-7 object-contain" />
@@ -42,7 +42,7 @@ export default function Header({
         </div>
         
         {/* Navigation Tabs */}
-        <nav className="flex items-center space-x-1 sm:space-x-2 relative">
+        <nav className="flex items-center space-x-1 sm:space-x-2 relative w-full sm:w-auto sm:flex-1 min-w-0 overflow-x-auto no-scrollbar mt-2 sm:mt-0 justify-start sm:justify-center order-last sm:order-none pb-1 sm:pb-0">
           {([
             { id: "dashboard", label: t("dashboard"), icon: Trophy },
             { id: "matches", label: t("matches"), icon: Calendar },
@@ -59,7 +59,7 @@ export default function Header({
                   setActiveTab(tab.id);
                   setMoreMenuOpen(false);
                 }}
-                className={`flex flex-col items-center justify-center w-14 sm:w-16 h-12 rounded-xl transition-all relative ${
+                className={`flex flex-col items-center justify-center w-14 sm:w-16 h-12 shrink-0 rounded-xl transition-all relative ${
                   isActive
                     ? "text-emerald-400 font-bold bg-emerald-500/10"
                     : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/40"
@@ -80,7 +80,7 @@ export default function Header({
           <div className="relative">
             <button
               onClick={() => setMoreMenuOpen(!moreMenuOpen)}
-              className={`flex flex-col items-center justify-center w-14 sm:w-16 h-12 rounded-xl transition-all ${
+              className={`flex flex-col items-center justify-center w-14 sm:w-16 h-12 shrink-0 rounded-xl transition-all ${
                 ["news", "stadiums", "archive", "predictions", "about", "teams"].includes(activeTab)
                   ? "text-emerald-400 font-bold bg-emerald-500/10"
                   : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/40"
@@ -140,7 +140,7 @@ export default function Header({
           </div>
         </nav>
 
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2 shrink-0">
           {/* Language Selector Dropdown */}
           <select
             value={lang}
