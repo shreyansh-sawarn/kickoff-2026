@@ -11,10 +11,8 @@ export function WinnerPopup({ isTournamentOver }: WinnerPopupProps) {
   useEffect(() => {
     if (!isTournamentOver) return;
 
-    const hasSeen = localStorage.getItem("hasSeenConfetti");
-    if (!hasSeen) {
-      const duration = 5 * 1000;
-      const animationEnd = Date.now() + duration;
+    const duration = 5 * 1000;
+    const animationEnd = Date.now() + duration;
       const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 10000 };
 
       const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
@@ -37,9 +35,6 @@ export function WinnerPopup({ isTournamentOver }: WinnerPopupProps) {
           origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
         });
       }, 250);
-
-      localStorage.setItem("hasSeenConfetti", "true");
-    }
   }, [isTournamentOver]);
 
   return null;

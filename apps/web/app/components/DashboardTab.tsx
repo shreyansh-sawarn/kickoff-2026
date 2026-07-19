@@ -1,4 +1,5 @@
 import React from "react";
+import confetti from "canvas-confetti";
 import { Match, Group, PlayerLeaderboards } from "@wc26/types";
 import { getFlagCdnUrl, formatMatchTime, formatMatchDate } from "@wc26/utils";
 import { DashboardFavorites } from "./DashboardFavorites";
@@ -32,6 +33,22 @@ export default function DashboardTab({
   setActiveTab
 }: DashboardTabProps) {
   const topScorer = players?.goals && players.goals.length > 0 ? players.goals[0] : null;
+
+  const triggerConfetti = () => {
+    const duration = 3 * 1000;
+    const animationEnd = Date.now() + duration;
+    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 10000 };
+
+    const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
+
+    const interval: any = setInterval(function() {
+      const timeLeft = animationEnd - Date.now();
+      if (timeLeft <= 0) return clearInterval(interval);
+      const particleCount = 50 * (timeLeft / duration);
+      confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
+      confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
+    }, 250);
+  };
 
   return (
     <div className="space-y-8">
@@ -68,7 +85,10 @@ export default function DashboardTab({
             
             <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 mt-4 w-full sm:w-auto">
               <button onClick={() => setActiveTab("knockout")} className="w-full sm:w-auto px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold rounded-xl transition">View Final Bracket</button>
-              <button onClick={() => router.push("/archive")} className="w-full sm:w-auto px-6 py-2.5 bg-slate-800/80 hover:bg-slate-700 text-white font-bold rounded-xl transition border border-slate-700">Tournament Archive</button>
+              <button onClick={() => setActiveTab("archive")} className="w-full sm:w-auto px-6 py-2.5 bg-slate-800/80 hover:bg-slate-700 text-white font-bold rounded-xl transition border border-slate-700">Tournament Archive</button>
+              <button onClick={triggerConfetti} className="w-full sm:w-auto px-6 py-2.5 bg-indigo-600/20 hover:bg-indigo-500/30 text-indigo-300 font-bold rounded-xl transition border border-indigo-500/30 flex items-center justify-center space-x-2">
+                <span>🎉</span> <span>Celebrate!</span>
+              </button>
             </div>
           </div>
         </div>
