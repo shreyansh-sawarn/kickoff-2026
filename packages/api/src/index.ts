@@ -373,7 +373,7 @@ export async function getPlayers(): Promise<PlayerLeaderboards> {
 
   const baseUrl = (process as any).env.WC26_API_BASE_URL || "https://kickoff-2026-api.fly.dev/api/v1";
   
-  const fetchList = async (endpoint: string, key: string, statProp: string) => {
+  const fetchList = async (endpoint: string, key: string, statProp: string): Promise<Player[]> => {
     try {
       const res = await fetch(`${baseUrl}/${endpoint}`, { cache: "no-store" } as any);
       if (res.ok) {
