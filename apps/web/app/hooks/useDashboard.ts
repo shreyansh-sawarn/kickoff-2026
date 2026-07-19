@@ -233,7 +233,24 @@ export function useDashboard() {
     favorites.includes(m.homeTeam.id) || favorites.includes(m.awayTeam.id)
   );
 
-  const isTournamentOver = Date.now() > new Date("2026-07-20T00:00:00Z").getTime();
+  const finalMatch = matches.find(m => m.group?.toLowerCase() === 'final' && m.status === 'completed');
+  const isTournamentOver = !!finalMatch;
+  
+  let champion: Team | null = null;
+  if (finalMatch) {
+    const homeScore = finalMatch.homeScore ?? 0;
+    const awayScore = finalMatch.awayScore ?? 0;
+    if (homeScore > awayScore) {
+      champion = finalMatch.homeTeam;
+    } else if (awayScore > homeScore) {
+      champion = finalMatch.awayTeam;
+    } else {
+      const homePens = finalMatch.homePenaltyScore ?? 0;
+      const awayPens = finalMatch.awayPenaltyScore ?? 0;
+      if (homePens > awayPens) champion = finalMatch.homeTeam;
+      else champion = finalMatch.awayTeam;
+    }
+  }
 
   return {
     activeTab,
@@ -261,6 +278,8 @@ export function useDashboard() {
     liveMatches,
     upcomingMatches,
     starredMatches,
-    isTournamentOver
+    completedMatches,
+    isTournamentOver,
+    champion
   };
 }

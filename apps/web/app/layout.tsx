@@ -1,6 +1,12 @@
 import "../styles/global.css";
-import { Metadata } from "next";
+import { Metadata, Viewport } from "next";
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
 export const metadata: Metadata = {
   title: "🏆 Kickoff 2026 — FIFA World Cup Companion App",
   description: "Live match tickers, group standings, fixtures, schedules, team profiles and rich tournament statistics for the FIFA World Cup 2026.",

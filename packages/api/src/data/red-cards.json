@@ -1,0 +1,101 @@
+{
+  "count": 16,
+  "red_cards": [
+    {
+      "rank": 1,
+      "player_name": "Agustín Canobbio",
+      "team_code": "URU",
+      "count": 1
+    },
+    {
+      "rank": 2,
+      "player_name": "Assim Madibo",
+      "team_code": "QAT",
+      "count": 1
+    },
+    {
+      "rank": 3,
+      "player_name": "Breel Embolo",
+      "team_code": "SUI",
+      "count": 1
+    },
+    {
+      "rank": 4,
+      "player_name": "César Montes",
+      "team_code": "MEX",
+      "count": 1
+    },
+    {
+      "rank": 5,
+      "player_name": "Enzo Fernández",
+      "team_code": "ARG",
+      "count": 1
+    },
+    {
+      "rank": 6,
+      "player_name": "Folarin Balogun",
+      "team_code": "USA",
+      "count": 1
+    },
+    {
+      "rank": 7,
+      "player_name": "Homam Ahmed",
+      "team_code": "QAT",
+      "count": 1
+    },
+    {
+      "rank": 8,
+      "player_name": "Jarell Quansah",
+      "team_code": "ENG",
+      "count": 1
+    },
+    {
+      "rank": 9,
+      "player_name": "Miguel Almirón",
+      "team_code": "PAR",
+      "count": 1
+    },
+    {
+      "rank": 10,
+      "player_name": "Nathan Ngoy",
+      "team_code": "BEL",
+      "count": 1
+    },
+    {
+      "rank": 11,
+      "player_name": "Piero Hincapié",
+      "team_code": "ECU",
+      "count": 1
+    },
+    {
+      "rank": 12,
+      "player_name": "Rebin Sulaka",
+      "team_code": "IRQ",
+      "count": 1
+    },
+    {
+      "rank": 13,
+      "player_name": "Sphephelo Sithole",
+      "team_code": "RSA",
+      "count": 1
+    },
+    {
+      "rank": 14,
+      "player_name": "Tarik Muharemovic",
+      "team_code": "BIH",
+      "count": 1
+    },
+    {
+      "rank": 15,
+      "player_name": "Themba Zwane",
+      "team_code": "RSA",
+      "count": 1
+    },
+    {
+      "rank": 16,
+      "player_name": "Tim Ream",
+      "team_code": "USA",
+      "count": 1
+    }
+  ]
+}

@@ -1,0 +1,125 @@
+{
+  "count": 20,
+  "assists": [
+    {
+      "rank": 1,
+      "player_name": "Michael Olise",
+      "team_code": "FRA",
+      "count": 7
+    },
+    {
+      "rank": 2,
+      "player_name": "Bruno Guimarães",
+      "team_code": "BRA",
+      "count": 4
+    },
+    {
+      "rank": 3,
+      "player_name": "Kylian Mbappé",
+      "team_code": "FRA",
+      "count": 4
+    },
+    {
+      "rank": 4,
+      "player_name": "Lionel Messi",
+      "team_code": "ARG",
+      "count": 4
+    },
+    {
+      "rank": 5,
+      "player_name": "Martin Ødegaard",
+      "team_code": "NOR",
+      "count": 4
+    },
+    {
+      "rank": 6,
+      "player_name": "Alexander Isak",
+      "team_code": "SWE",
+      "count": 3
+    },
+    {
+      "rank": 7,
+      "player_name": "Andreas Schjelderup",
+      "team_code": "NOR",
+      "count": 3
+    },
+    {
+      "rank": 8,
+      "player_name": "Anthony Gordon",
+      "team_code": "ENG",
+      "count": 3
+    },
+    {
+      "rank": 9,
+      "player_name": "Florian Wirtz",
+      "team_code": "GER",
+      "count": 3
+    },
+    {
+      "rank": 10,
+      "player_name": "Roberto Alvarado",
+      "team_code": "MEX",
+      "count": 3
+    },
+    {
+      "rank": 11,
+      "player_name": "Brahim Díaz",
+      "team_code": "MAR",
+      "count": 2
+    },
+    {
+      "rank": 12,
+      "player_name": "Breel Embolo",
+      "team_code": "SUI",
+      "count": 2
+    },
+    {
+      "rank": 13,
+      "player_name": "Bukayo Saka",
+      "team_code": "ENG",
+      "count": 2
+    },
+    {
+      "rank": 14,
+      "player_name": "Chris Wood",
+      "team_code": "NZL",
+      "count": 2
+    },
+    {
+      "rank": 15,
+      "player_name": "Crysencio Summerville",
+      "team_code": "NED",
+      "count": 2
+    },
+    {
+      "rank": 16,
+      "player_name": "Dani Olmo",
+      "team_code": "ESP",
+      "count": 2
+    },
+    {
+      "rank": 17,
+      "player_name": "Declan Rice",
+      "team_code": "ENG",
+      "count": 2
+    },
+    {
+      "rank": 18,
+      "player_name": "Deniz Undav",
+      "team_code": "GER",
+      "count": 2
+    },
+    {
+      "rank": 19,
+      "player_name": "Denzel Dumfries",
+      "team_code": "NED",
+      "count": 2
+    },
+    {
+      "rank": 20,
+      "player_name": "Hannibal Mejbri",
+      "team_code": "TUN",
+      "count": 2
+    }
+  ]
+}

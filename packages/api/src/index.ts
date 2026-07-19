@@ -1,6 +1,15 @@
 import { Team, Match, Group, Player, Stadium, PlayerLeaderboards, CleanSheetEntry } from "@wc26/types";
 import { TEAMS, STADIUMS } from "./staticData";
 
+import matchesStatic from "./data/matches.json";
+import newsStatic from "./data/news.json";
+import standingsStatic from "./data/standings.json";
+import scorersStatic from "./data/scorers.json";
+import assistsStatic from "./data/assists.json";
+import yellowCardsStatic from "./data/yellow-cards.json";
+import redCardsStatic from "./data/red-cards.json";
+import minutesStatic from "./data/minutes.json";
+
 export * from "./staticData";
 
 const stadiumNames: Record<string, { name: string; city: string; country: "USA" | "Mexico" | "Canada"; capacity: number }> = {
@@ -82,11 +91,7 @@ export async function getMatches(): Promise<Match[]> {
   const baseUrl = (process as any).env.WC26_API_BASE_URL || "https://kickoff-2026-api.fly.dev/api/v1";
 
   try {
-    const res = await fetch(`${baseUrl}/matches`, { cache: "no-store" });
-
-    if (!res.ok) throw new Error("API error");
-    
-    const json = await res.json();
+    const json: any = matchesStatic;
     const rawGames = json.matches || [];
 
     const teams = await getTeams();
@@ -271,9 +276,7 @@ export async function getNews(limit: number = 5) {
 
   const baseUrl = (process as any).env.WC26_API_BASE_URL || "https://kickoff-2026-api.fly.dev/api/v1";
   try {
-    const res = await fetch(`${baseUrl}/news?limit=${limit}`);
-    if (!res.ok) throw new Error("API error");
-    return await res.json();
+    return (newsStatic as any[]).slice(0, limit);
   } catch (e) {
     console.warn("Failed to fetch news from Python API:", e);
     return [];
@@ -302,11 +305,7 @@ export async function getStandings(): Promise<Group[]> {
   const baseUrl = (process as any).env.WC26_API_BASE_URL || "https://kickoff-2026-api.fly.dev/api/v1";
 
   try {
-    const res = await fetch(`${baseUrl}/standings`);
-
-    if (!res.ok) throw new Error("API error");
-    
-    const json = await res.json();
+    const json: any = standingsStatic;
     const rawGroups = json.groups || {};
 
     const teams = await getTeams();
@@ -373,11 +372,18 @@ export async function getPlayers(): Promise<PlayerLeaderboards> {
 
   const baseUrl = (process as any).env.WC26_API_BASE_URL || "https://kickoff-2026-api.fly.dev/api/v1";
   
+  const staticMap: Record<string, any> = {
+    'scorers': scorersStatic,
+    'assists': assistsStatic,
+    'yellow-cards': yellowCardsStatic,
+    'red-cards': redCardsStatic,
+    'minutes': minutesStatic
+  };
+
   const fetchList = async (endpoint: string, key: string, statProp: string): Promise<Player[]> => {
     try {
-      const res = await fetch(`${baseUrl}/${endpoint}`, { cache: "no-store" } as any);
-      if (res.ok) {
-        const json = await res.json();
+      const json = staticMap[endpoint];
+      if (json) {
         return (json[key] || []).map((p: any, idx: number) => ({
           id: `p-${idx}-${p.team_code}`,
           name: p.player_name,
