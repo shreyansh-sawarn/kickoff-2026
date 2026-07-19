@@ -17,3 +17,22 @@ body {
   min-height: 100vh;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 }
+
+/* Golden Theme overrides for the Final */
+.theme-gold .text-emerald-400 { color: #fbbf24 !important; }
+.theme-gold .text-emerald-450 { color: #f59e0b !important; }
+.theme-gold .text-emerald-500 { color: #d97706 !important; }
+.theme-gold .bg-emerald-400 { background-color: #fbbf24 !important; }
+.theme-gold .bg-emerald-500 { background-color: #f59e0b !important; }
+.theme-gold .bg-emerald-500\/5 { background-color: rgba(245, 158, 11, 0.05) !important; }
+.theme-gold .bg-emerald-500\/10 { background-color: rgba(245, 158, 11, 0.1) !important; }
+.theme-gold .bg-emerald-500\/20 { background-color: rgba(245, 158, 11, 0.2) !important; }
+.theme-gold .bg-emerald-500\/30 { background-color: rgba(245, 158, 11, 0.3) !important; }
+.theme-gold .border-emerald-400 { border-color: #fbbf24 !important; }
+.theme-gold .border-emerald-500 { border-color: #f59e0b !important; }
+.theme-gold .border-emerald-500\/20 { border-color: rgba(245, 158, 11, 0.2) !important; }
+.theme-gold .border-emerald-500\/30 { border-color: rgba(245, 158, 11, 0.3) !important; }
+.theme-gold .border-emerald-500\/60 { border-color: rgba(245, 158, 11, 0.6) !important; }
+.theme-gold .ring-emerald-500\/20 { --tw-ring-color: rgba(245, 158, 11, 0.2) !important; }
+.theme-gold .shadow-emerald-500\/5 { --tw-shadow-color: rgba(245, 158, 11, 0.05) !important; --tw-shadow: var(--tw-shadow-colored) !important; }
+

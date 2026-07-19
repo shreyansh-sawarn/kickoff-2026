@@ -108,9 +108,14 @@ export function PlayersTab({ players, t }: PlayersTabProps) {
                       </span>
                     </div>
                   </div>
-                  <div className="text-center shrink-0 ml-2">
+                  <div className="text-center shrink-0 ml-2 flex flex-col items-center">
                     <span className="font-black text-emerald-400 text-lg">{isCleanSheet ? item[valueKey] : item.tournamentStats[valueKey]}</span>
                     <span className="text-[9px] text-slate-500 uppercase tracking-wider block font-bold">{valueLabel}</span>
+                    {!isCleanSheet && valueKey === 'goals' && (
+                      <span className="text-[8px] text-slate-400 font-medium bg-slate-800/60 rounded px-1 mt-0.5 whitespace-nowrap">
+                        {item.tournamentStats.assists} Asts
+                      </span>
+                    )}
                   </div>
                 </div>
               );
@@ -148,6 +153,9 @@ export function PlayersTab({ players, t }: PlayersTabProps) {
                <div className="ml-4 pl-4 border-l border-slate-800 text-center">
                  <span className="font-black text-2xl text-white">{players.goals[0].tournamentStats.goals}</span>
                  <span className="text-[10px] text-slate-500 uppercase font-bold block">Goals</span>
+                 <span className="text-[9px] text-slate-400 font-medium block mt-1 bg-slate-800/40 rounded px-1.5 py-0.5">
+                   {players.goals[0].tournamentStats.assists} Assists
+                 </span>
                </div>
             </div>
           ) : (
@@ -274,11 +282,16 @@ export function PlayersTab({ players, t }: PlayersTabProps) {
                                 </span>
                               </div>
                             </div>
-                            <div className="text-center shrink-0 ml-2">
+                            <div className="text-center shrink-0 ml-2 flex flex-col items-center">
                               <span className="font-black text-emerald-400 text-sm">
                                 {activeModal.isCleanSheet ? item[activeModal.valueKey] : item.tournamentStats[activeModal.valueKey]}
                               </span>
                               <span className="text-[8px] text-slate-500 uppercase tracking-wider block font-bold">{activeModal.valueLabel}</span>
+                              {!activeModal.isCleanSheet && activeModal.valueKey === 'goals' && (
+                                <span className="text-[8px] text-slate-400 font-medium bg-slate-800/60 rounded px-1 mt-0.5 whitespace-nowrap">
+                                  {item.tournamentStats.assists} Asts
+                                </span>
+                              )}
                             </div>
                           </div>
                         );

@@ -1,4 +1,5 @@
 import React from "react";
+import confetti from "canvas-confetti";
 import { Match, Group, PlayerLeaderboards } from "@wc26/types";
 import { getFlagCdnUrl, formatMatchTime, formatMatchDate } from "@wc26/utils";
 import { DashboardFavorites } from "./DashboardFavorites";
@@ -7,6 +8,7 @@ import { DashboardStandingsSummary } from "./DashboardStandingsSummary";
 import { FlagOrShield } from "./FlagOrShield";
 
 interface DashboardTabProps {
+  isTournamentOver?: boolean;
   starredMatches: Match[];
   liveMatches: Match[];
   upcomingMatches: Match[];
@@ -19,6 +21,7 @@ interface DashboardTabProps {
 }
 
 export default function DashboardTab({
+  isTournamentOver,
   starredMatches,
   liveMatches,
   upcomingMatches,
@@ -30,6 +33,22 @@ export default function DashboardTab({
   setActiveTab
 }: DashboardTabProps) {
   const topScorer = players?.goals && players.goals.length > 0 ? players.goals[0] : null;
+
+  const triggerConfetti = () => {
+    const duration = 3 * 1000;
+    const animationEnd = Date.now() + duration;
+    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 10000 };
+
+    const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
+
+    const interval: any = setInterval(function() {
+      const timeLeft = animationEnd - Date.now();
+      if (timeLeft <= 0) return clearInterval(interval);
+      const particleCount = 50 * (timeLeft / duration);
+      confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
+      confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
+    }, 250);
+  };
 
   return (
     <div className="space-y-8">
@@ -49,7 +68,32 @@ export default function DashboardTab({
       />
 
       {/* Dashboard layout blocks: Upcoming Fixtures & Standings */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      {isTournamentOver ? (
+        <div className="bg-gradient-to-br from-amber-500/20 via-[#131b2e] to-slate-900 border border-amber-500/30 rounded-3xl p-8 shadow-2xl relative overflow-hidden flex flex-col items-center justify-center min-h-[300px]">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/10 blur-3xl rounded-full"></div>
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-amber-500/10 blur-3xl rounded-full"></div>
+          
+          <div className="z-10 flex flex-col items-center text-center space-y-6">
+            <span className="text-sm font-black uppercase tracking-[0.3em] text-amber-500 drop-shadow-sm">World Champions</span>
+            <div className="flex flex-col sm:flex-row items-center sm:space-x-6 space-y-4 sm:space-y-0">
+              <FlagOrShield code="ar" className="w-24 h-16 rounded-xl shadow-lg shrink-0" imgClassName="object-cover" />
+              <div className="flex flex-col sm:items-start items-center">
+                <span className="text-4xl sm:text-5xl font-black text-white uppercase tracking-widest drop-shadow-sm text-center sm:text-left">Argentina</span>
+                <span className="text-slate-400 font-bold uppercase tracking-widest mt-1">🏆 Title Winners</span>
+              </div>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 mt-4 w-full sm:w-auto">
+              <button onClick={() => setActiveTab("knockout")} className="w-full sm:w-auto px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold rounded-xl transition">View Final Bracket</button>
+              <button onClick={() => setActiveTab("archive")} className="w-full sm:w-auto px-6 py-2.5 bg-slate-800/80 hover:bg-slate-700 text-white font-bold rounded-xl transition border border-slate-700">Tournament Archive</button>
+              <button onClick={triggerConfetti} className="w-full sm:w-auto px-6 py-2.5 bg-indigo-600/20 hover:bg-indigo-500/30 text-indigo-300 font-bold rounded-xl transition border border-indigo-500/30 flex items-center justify-center space-x-2">
+                <span>🎉</span> <span>Celebrate!</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left Column: Upcoming matches */}
         <div className="lg:col-span-2 space-y-6">
           <div className="flex justify-between items-center">
@@ -67,8 +111,17 @@ export default function DashboardTab({
               <div 
                 key={match.id}
                 onClick={() => router.push(`/matches/${match.id}`)}
-                className="bg-[#131b2e] border border-slate-800/60 rounded-xl p-4 flex items-center justify-between hover:border-slate-700/60 transition-all duration-300 cursor-pointer"
+                className={`relative bg-[#131b2e] border rounded-xl p-4 flex items-center justify-between hover:border-slate-700/60 transition-all duration-300 cursor-pointer overflow-hidden ${
+                  match.group?.toLowerCase() === 'final' 
+                    ? 'border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.1)]' 
+                    : 'border-slate-800/60'
+                }`}
               >
+                {match.group?.toLowerCase() === 'final' && (
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 bg-amber-500 text-slate-900 text-[8px] font-black uppercase px-3 py-0.5 rounded-b-md tracking-widest z-10 shadow-sm">
+                    Final
+                  </div>
+                )}
                 <div className="flex items-center space-x-4 flex-1">
                   <FlagOrShield code={match.homeTeam.code} className="w-8 h-5 shrink-0" imgClassName="object-cover" />
                   <span className="font-semibold text-sm text-slate-200 hidden sm:inline-block w-28 line-clamp-1">{match.homeTeam.name}</span>
@@ -93,6 +146,7 @@ export default function DashboardTab({
         {/* Right Column: Mini Standing */}
         <DashboardStandingsSummary standings={standings} setActiveTab={setActiveTab} />
       </div>
+      )}
 
       {/* Live Stats Quick-View Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

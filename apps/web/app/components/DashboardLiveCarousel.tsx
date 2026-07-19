@@ -37,8 +37,17 @@ export function DashboardLiveCarousel({
               <div 
                 key={match.id} 
                 onClick={() => router.push(`/matches/${match.id}`)}
-                className="bg-[#131b2e] border border-emerald-500/30 rounded-2xl overflow-hidden hover:shadow-xl hover:shadow-emerald-500/5 transition-all duration-300 relative group cursor-pointer"
+                className={`bg-[#131b2e] border rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300 relative group cursor-pointer ${
+                  match.group?.toLowerCase() === 'final'
+                    ? 'border-amber-500/60 shadow-[0_0_25px_rgba(245,158,11,0.2)] hover:shadow-[0_0_35px_rgba(245,158,11,0.3)]'
+                    : 'border-emerald-500/30 hover:shadow-emerald-500/5'
+                }`}
               >
+                {match.group?.toLowerCase() === 'final' && (
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 bg-amber-500 text-slate-900 text-[9px] font-black uppercase px-4 py-0.5 rounded-b-lg tracking-widest z-10 shadow-md">
+                    Final
+                  </div>
+                )}
                 <div className="absolute top-3 right-3 bg-rose-500/20 border border-rose-500/40 text-rose-400 text-[10px] px-2.5 py-0.5 rounded-full font-bold flex items-center space-x-1 animate-pulse">
                   <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
                   <span>{match.clock || `${match.minute}'`}</span>

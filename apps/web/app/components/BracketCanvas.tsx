@@ -536,6 +536,11 @@ export const BracketCanvas = forwardRef<any, BracketCanvasProps>(
     }
   ];
 
+  const finalists = React.useMemo(() => {
+    const finalMatch = finalMatches[0];
+    return [finalMatch?.home, finalMatch?.away].filter(t => t && t !== "TBD");
+  }, [finalMatches]);
+
   // ── Team path tracing for hover highlighting ──────────────────────
   const teamPath = (() => {
     if (!hoveredTeam) return null;
@@ -697,19 +702,28 @@ export const BracketCanvas = forwardRef<any, BracketCanvasProps>(
                     };
 
                     // Connector class for outgoing horizontal + vertical from this match
+                    const isWonByFinalist = item.winner && finalists.includes(item.winner);
                     const pathGlow = "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]";
+                    const goldGlow = "bg-amber-500 shadow-[0_0_12px_rgba(245,158,11,0.6)] z-10";
                     const pathDim  = "bg-slate-800/20";
+                    
                     const myConnectorClass = isConnectorInPath(colIdx, idx)
                       ? pathGlow
-                      : (hoveredTeam ? pathDim : lineHoverClass);
+                      : isWonByFinalist ? goldGlow : (hoveredTeam ? pathDim : lineHoverClass);
+                      
                     // Far horizontal connector (even matches, connects pair → next round)
+                    const nextMatchWonByFinalist = isEven && (
+                      (item.winner && finalists.includes(item.winner)) || 
+                      (column.matches[idx + 1]?.winner && finalists.includes(column.matches[idx + 1]?.winner))
+                    );
                     const farConnectorClass = (isEven && isFarConnectorInPath(colIdx, idx))
                       ? pathGlow
-                      : (hoveredTeam ? pathDim : lineHoverClass);
+                      : nextMatchWonByFinalist ? goldGlow : (hoveredTeam ? pathDim : lineHoverClass);
+                      
                     // SF connector class (all three parts are one path segment)
                     const sfConnectorClass = isConnectorInPath(colIdx, idx)
                       ? pathGlow
-                      : (hoveredTeam ? pathDim : lineHoverClass);
+                      : isWonByFinalist ? goldGlow : (hoveredTeam ? pathDim : lineHoverClass);
 
                     const cardInner = (
                       <div

@@ -318,8 +318,14 @@ export default function MatchDetails() {
       </div>
 
       {/* Main Scoreboard Banner */}
-      <div className="bg-gradient-to-b from-[#131b2e] to-[#0c1122] border-b border-slate-800/60 py-10 px-4">
-        <div className="max-w-4xl mx-auto flex flex-col items-center">
+      <div className={`relative bg-gradient-to-b from-[#131b2e] to-[#0c1122] border-b border-slate-800/60 py-10 px-4 overflow-hidden ${match.group === "final" ? "theme-gold" : ""}`}>
+        {match.group === "final" && (
+          <div 
+            className="absolute inset-0 z-0 opacity-20 bg-center bg-cover bg-no-repeat pointer-events-none mix-blend-luminosity"
+            style={{ backgroundImage: `url('https://images.unsplash.com/photo-1579952363873-27f3bade9f55?q=80&w=2000&auto=format&fit=crop')` }}
+          />
+        )}
+        <div className="max-w-4xl mx-auto flex flex-col items-center relative z-10">
           
           <div className="flex items-center space-x-2 text-xs font-bold text-slate-400 uppercase tracking-widest mb-6">
             <MapPin className="w-3.5 h-3.5 mr-1" />
@@ -636,11 +642,25 @@ export default function MatchDetails() {
                                       {event.type === "card_yellow" && <div className="w-2.5 h-[14px] bg-[#f5a623] rounded-[2px] ml-2 shrink-0 shadow-sm" />}
                                       {event.type === "card_red" && <div className="w-2.5 h-[14px] bg-[#e53e3e] rounded-[2px] ml-2 shrink-0 shadow-sm" />}
                                       {event.type === "substitution" && <span className="text-xs text-emerald-450 ml-1.5 shrink-0">🔄</span>}
+                                      {event.type === "penalty_miss" && (
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="ml-1.5 shrink-0">
+                                          {/* Goal frame */}
+                                          <path d="M4 20V8H20V20" stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                                          {/* X */}
+                                          <path d="M9 11L15 17M15 11L9 17" stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                                        </svg>
+                                      )}
                                     </div>
                                     
                                     {event.playerTwo && (
                                       <span className="text-[10px] text-slate-400 block mt-1">
                                         {event.type === "substitution" ? `Out: ${event.playerTwo}` : `Assist: ${event.playerTwo}`}
+                                      </span>
+                                    )}
+
+                                    {event.type === "penalty_miss" && (
+                                      <span className="text-[10px] text-slate-400 block mt-1">
+                                        {event.detail === "saved" ? "Penalty - Goalkeeper save" : "Penalty - Missed"}
                                       </span>
                                     )}
                                     
@@ -656,7 +676,7 @@ export default function MatchDetails() {
                                       </span>
                                     )}
                                     
-                                    {event.detail && (
+                                    {event.detail && event.type !== "penalty_miss" && (
                                       <span className="text-[10px] text-amber-400 font-bold block mt-0.5">{event.detail}</span>
                                     )}
                                   </div>
