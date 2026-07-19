@@ -17,6 +17,7 @@ import { StadiumsTab } from "./components/StadiumsTab";
 import { ArchiveTab } from "./components/ArchiveTab";
 import { AboutTab } from "./components/AboutTab";
 import NewsTab from "./components/NewsTab";
+import { WinnerPopup } from "./components/WinnerPopup";
 
 export default function Web() {
   const router = useRouter();
@@ -50,8 +51,10 @@ export default function Web() {
     isTournamentOver
   } = state;
 
+  const isFinalLive = liveMatches?.some(m => m.group?.toLowerCase() === 'final');
+
   return (
-    <div className="bg-[#0b0f19] text-slate-100 min-h-screen pb-12">
+    <div className={`bg-[#0b0f19] text-slate-100 min-h-screen pb-12 ${isFinalLive ? 'theme-gold' : ''}`}>
       {/* Dynamic SEO Structured Schemas (JSON-LD) */}
       {matches?.slice(0, 10).map((m) => (
         <JsonLd key={`schema-match-${m.id}`} schema={generateMatchSchema(m)} />
@@ -96,15 +99,18 @@ export default function Web() {
           </div>
         ) : (
           <>
+            <WinnerPopup isTournamentOver={isTournamentOver} />
             {/* Countdown or Archival Winner Banner */}
             <CountdownBanner
               isTournamentOver={isTournamentOver}
               countdown={countdown}
+              isNextMatchFinal={upcomingMatches?.length > 0 && upcomingMatches[0].group?.toLowerCase() === 'final'}
             />
 
             {/* TAB CONTENTS */}
             {activeTab === "dashboard" && (
               <DashboardTab
+                isTournamentOver={isTournamentOver}
                 starredMatches={starredMatches}
                 liveMatches={liveMatches}
                 upcomingMatches={upcomingMatches}

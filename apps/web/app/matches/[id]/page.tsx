@@ -318,8 +318,14 @@ export default function MatchDetails() {
       </div>
 
       {/* Main Scoreboard Banner */}
-      <div className="bg-gradient-to-b from-[#131b2e] to-[#0c1122] border-b border-slate-800/60 py-10 px-4">
-        <div className="max-w-4xl mx-auto flex flex-col items-center">
+      <div className={`relative bg-gradient-to-b from-[#131b2e] to-[#0c1122] border-b border-slate-800/60 py-10 px-4 overflow-hidden ${match.group === "final" ? "theme-gold" : ""}`}>
+        {match.group === "final" && (
+          <div 
+            className="absolute inset-0 z-0 opacity-20 bg-center bg-cover bg-no-repeat pointer-events-none mix-blend-luminosity"
+            style={{ backgroundImage: `url('https://images.unsplash.com/photo-1579952363873-27f3bade9f55?q=80&w=2000&auto=format&fit=crop')` }}
+          />
+        )}
+        <div className="max-w-4xl mx-auto flex flex-col items-center relative z-10">
           
           <div className="flex items-center space-x-2 text-xs font-bold text-slate-400 uppercase tracking-widest mb-6">
             <MapPin className="w-3.5 h-3.5 mr-1" />

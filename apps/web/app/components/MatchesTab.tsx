@@ -226,9 +226,16 @@ export default function MatchesTab({
         className={`p-4 sm:p-6 flex flex-col sm:flex-row items-center justify-between hover:bg-slate-805/10 transition gap-4 cursor-pointer relative rounded-2xl border transition-all duration-300 ${
           isHighlighted 
             ? "bg-emerald-500/10 border-emerald-500/60 ring-2 ring-emerald-500/20" 
-            : "border-transparent"
+            : match.group?.toLowerCase() === 'final'
+              ? "bg-[#131b2e] border-amber-500/40 shadow-[0_0_15px_rgba(245,158,11,0.1)] hover:border-amber-500/60 hover:bg-amber-500/5 overflow-hidden"
+              : "border-transparent"
         }`}
       >
+        {match.group?.toLowerCase() === 'final' && !isHighlighted && (
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 bg-amber-500 text-slate-900 text-[8px] font-black uppercase px-3 py-0.5 rounded-b-md tracking-widest z-10 shadow-sm">
+            Final
+          </div>
+        )}
         <div className="flex flex-col text-center sm:text-left sm:w-[30%]">
           <span className="text-xs text-slate-400 font-semibold">{formatGroupOrRound(match.group)}</span>
           <span className="text-[10px] text-slate-505 flex items-center justify-center sm:justify-start mt-0.5 truncate">
